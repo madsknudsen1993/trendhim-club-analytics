@@ -1,0 +1,699 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Info,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Calculator,
+  Truck,
+  Globe,
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { formatNumber, formatCurrency } from "@/lib/chart-config";
+import { CORE_METRICS } from "./data-source";
+
+interface ROIData {
+  clubTotalProfit: number;
+  nonClubTotalProfit: number;
+  clubAvgProfit: number;
+  nonClubAvgProfit: number;
+  profitDifference: number;
+  profitDifferencePercent: number;
+  clubOrders: number;
+  incrementalProfit: number;
+  totalCashbackCost: number;
+  shippingSubsidy: number;
+  totalProgramCosts: number;
+  netValue: number;
+  roi: number;
+  isProfitable: boolean;
+}
+
+interface ProgramROITabProps {
+  isLoading: boolean;
+}
+
+// Country-level shipping subsidy data
+const countryShippingData = [
+  { country: "Denmark", threshold: 299, clubThreshold: 199, subsidizedOrders: 4520, subsidyCost: 135600, avgSubsidy: 30 },
+  { country: "Sweden", threshold: 399, clubThreshold: 299, subsidizedOrders: 3890, subsidyCost: 116700, avgSubsidy: 30 },
+  { country: "Norway", threshold: 449, clubThreshold: 299, subsidizedOrders: 3210, subsidyCost: 112350, avgSubsidy: 35 },
+  { country: "Germany", threshold: 49, clubThreshold: 29, subsidizedOrders: 6780, subsidyCost: 237300, avgSubsidy: 35 },
+  { country: "UK", threshold: 39, clubThreshold: 25, subsidizedOrders: 4120, subsidyCost: 144200, avgSubsidy: 35 },
+  { country: "Netherlands", threshold: 49, clubThreshold: 29, subsidizedOrders: 3250, subsidyCost: 97500, avgSubsidy: 30 },
+  { country: "Other", threshold: "Varies", clubThreshold: "Varies", subsidizedOrders: 2189, subsidyCost: 65670, avgSubsidy: 30 },
+];
+
+// Sensitivity analysis data
+const sensitivityData = [
+  { scenario: "Base Case", profitDiff: 1.37, orders: 75272, incrementalProfit: 103122, costs: 3444093, netValue: -3340971, roi: -97.0 },
+  { scenario: "+50% Profit Diff", profitDiff: 2.06, orders: 75272, incrementalProfit: 155060, costs: 3444093, netValue: -3289033, roi: -95.5 },
+  { scenario: "+100% Profit Diff", profitDiff: 2.74, orders: 75272, incrementalProfit: 206244, costs: 3444093, netValue: -3237849, roi: -94.0 },
+  { scenario: "-50% Cashback", profitDiff: 1.37, orders: 75272, incrementalProfit: 103122, costs: 2141431, netValue: -2038309, roi: -95.2 },
+  { scenario: "No Shipping Subsidy", profitDiff: 1.37, orders: 75272, incrementalProfit: 103122, costs: 2605323, netValue: -2502201, roi: -96.0 },
+  { scenario: "2x Club Orders", profitDiff: 1.37, orders: 150544, incrementalProfit: 206244, costs: 6888186, netValue: -6681942, roi: -97.0 },
+];
+
+export function ProgramROITab({ isLoading: parentLoading }: ProgramROITabProps) {
+  const [roiData, setRoiData] = useState<ROIData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
+  const [isCashbackOpen, setIsCashbackOpen] = useState(false);
+  const [isShippingOpen, setIsShippingOpen] = useState(false);
+  const [isIncrementalOpen, setIsIncrementalOpen] = useState(false);
+  const [isProfitabilityOpen, setIsProfitabilityOpen] = useState(false);
+
+  // Values from CORE_METRICS (Single Source of Truth in data-source.tsx)
+  const pdfData = {
+    // Profit metrics
+    clubAvgProfit: CORE_METRICS.profit.clubAvgProfit,
+    nonClubAvgProfit: CORE_METRICS.profit.nonClubAvgProfit,
+    profitDifference: CORE_METRICS.profit.differenceDKK,
+    profitDifferencePercent: (CORE_METRICS.profit.differenceDKK / CORE_METRICS.profit.nonClubAvgProfit) * 100,
+
+    // Order metrics
+    clubOrders: CORE_METRICS.orders.club,
+
+    // Program economics
+    incrementalProfit: CORE_METRICS.value.incrementalProfit,
+    totalCashbackCost: CORE_METRICS.costs.cashbackRedeemed,
+    shippingSubsidy: CORE_METRICS.costs.shippingSubsidy,
+    totalProgramCosts: CORE_METRICS.costs.totalProgramCosts,
+    netValue: CORE_METRICS.value.netValue,
+    roi: CORE_METRICS.value.roi,
+    isProfitable: CORE_METRICS.value.roi >= 0,
+  };
+
+  useEffect(() => {
+    const fetchROI = async () => {
+      try {
+        const response = await fetch("/api/analytics/roi");
+        if (response.ok) {
+          const data = await response.json();
+          setRoiData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching ROI data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchROI();
+  }, []);
+
+  if (isLoading || parentLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-48 w-full" />
+        <div className="grid gap-4 md:grid-cols-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+      </div>
+    );
+  }
+
+  const isProfitable = pdfData.isProfitable;
+  const netValue = pdfData.netValue;
+  const roi = pdfData.roi;
+
+  return (
+    <div className="space-y-6">
+      {/* Hypothesis Header */}
+      <Card className="border-l-4 border-l-[#06402b]">
+        <CardHeader>
+          <CardTitle className="text-xl">Hypothesis 9: Program ROI</CardTitle>
+          <CardDescription className="text-base mt-2">
+            "Incremental revenue/profit from Club members covers the costs of cashback and reduced shipping thresholds."
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            This analysis calculates the net financial impact of the Trendhim Club program by comparing
+            the incremental profit generated by Club members against the program costs (cashback and shipping subsidies).
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Verdict Card */}
+      <Card className={isProfitable
+        ? "border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20"
+        : "border-l-4 border-l-red-500 bg-red-50/50 dark:bg-red-950/20"
+      }>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            {isProfitable ? (
+              <CheckCircle className="h-6 w-6 text-green-500" />
+            ) : (
+              <XCircle className="h-6 w-6 text-red-500" />
+            )}
+            <CardTitle>{isProfitable ? "Program is Profitable" : "Program is NOT Profitable"}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Net Program Value</p>
+              <p className={`text-3xl font-bold ${netValue >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {formatCurrency(netValue)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Incremental Profit - Total Costs
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Program ROI</p>
+              <p className={`text-3xl font-bold ${roi >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {roi >= 0 ? "+" : ""}{roi.toFixed(1)}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                (Net Value / Total Costs) × 100
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Incremental Profit</p>
+              <p className="text-3xl font-bold text-blue-600">
+                +{formatCurrency(pdfData.incrementalProfit)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                From Club profit advantage
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ROI Calculation Framework Accordion */}
+      <Collapsible open={isMethodologyOpen} onOpenChange={setIsMethodologyOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-base">ROI Calculation Framework</CardTitle>
+                <Badge variant="outline" className="ml-auto">
+                  {isMethodologyOpen ? "Click to collapse" : "Click to expand"}
+                </Badge>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-6">
+              {/* The Core Question */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
+                <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2">The Core Question</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  Does the Club program generate more value than it costs? We calculate this by measuring
+                  the incremental profit from Club members and comparing it against program costs.
+                </p>
+              </div>
+
+              {/* Net Program Value Formula */}
+              <div>
+                <h4 className="font-semibold mb-2">Net Program Value Formula</h4>
+                <div className="bg-muted p-4 rounded-lg font-mono text-sm space-y-2">
+                  <p><strong>Net Program Value</strong> = Incremental Profit - Total Costs</p>
+                  <p className="text-muted-foreground text-xs mt-2">Where:</p>
+                  <p className="text-muted-foreground text-xs">
+                    • Incremental Profit = (Club Avg Profit - Non-Club Avg Profit) × Club Orders
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    • Total Costs = Cashback Redeemed + Shipping Subsidy
+                  </p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded">
+                    <p className="text-green-700 dark:text-green-400 font-medium">If Net Value &gt; 0</p>
+                    <p className="text-green-600 dark:text-green-500">PROFITABLE</p>
+                  </div>
+                  <div className="p-2 bg-red-50 dark:bg-red-950/30 rounded">
+                    <p className="text-red-700 dark:text-red-400 font-medium">If Net Value &lt; 0</p>
+                    <p className="text-red-600 dark:text-red-500">COSTS more than generates</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Calculation Table */}
+              <div>
+                <h4 className="font-semibold mb-2">Detailed Calculation</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b bg-muted">
+                        <th className="text-left py-2 px-3">Component</th>
+                        <th className="text-left py-2 px-3">Formula</th>
+                        <th className="text-right py-2 px-3">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2 px-3">Club Avg Profit</td>
+                        <td className="py-2 px-3 text-muted-foreground">Sum of Club profits ÷ Club orders</td>
+                        <td className="py-2 px-3 text-right font-medium">{pdfData.clubAvgProfit} DKK</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3">Non-Club Avg Profit</td>
+                        <td className="py-2 px-3 text-muted-foreground">Sum of Non-Club profits ÷ Non-Club orders</td>
+                        <td className="py-2 px-3 text-right font-medium">{pdfData.nonClubAvgProfit} DKK</td>
+                      </tr>
+                      <tr className="border-b bg-green-50/50 dark:bg-green-950/20">
+                        <td className="py-2 px-3 font-medium">Profit Difference</td>
+                        <td className="py-2 px-3 text-muted-foreground">Club Avg - Non-Club Avg</td>
+                        <td className="py-2 px-3 text-right font-bold text-green-600">
+                          +{pdfData.profitDifference.toFixed(2)} DKK/order
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3">Club Orders</td>
+                        <td className="py-2 px-3 text-muted-foreground">Conservative attribution count</td>
+                        <td className="py-2 px-3 text-right font-medium">{formatNumber(pdfData.clubOrders)}</td>
+                      </tr>
+                      <tr className="border-b bg-blue-50/50 dark:bg-blue-950/20">
+                        <td className="py-2 px-3 font-medium">Incremental Profit</td>
+                        <td className="py-2 px-3 text-muted-foreground">Profit Difference × Club Orders</td>
+                        <td className="py-2 px-3 text-right font-bold text-blue-600">+{formatCurrency(pdfData.incrementalProfit)}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3">Cashback Cost</td>
+                        <td className="py-2 px-3 text-muted-foreground">Total redeemed cashback (DKK)</td>
+                        <td className="py-2 px-3 text-right font-medium text-red-600">-{formatCurrency(pdfData.totalCashbackCost)}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 px-3">Shipping Subsidy</td>
+                        <td className="py-2 px-3 text-muted-foreground">~30 DKK × subsidized orders</td>
+                        <td className="py-2 px-3 text-right font-medium text-red-600">-{formatCurrency(pdfData.shippingSubsidy)}</td>
+                      </tr>
+                      <tr className="border-b bg-red-50/50 dark:bg-red-950/20">
+                        <td className="py-2 px-3 font-medium">Total Costs</td>
+                        <td className="py-2 px-3 text-muted-foreground">Cashback + Shipping</td>
+                        <td className="py-2 px-3 text-right font-bold text-red-600">-{formatCurrency(pdfData.totalProgramCosts)}</td>
+                      </tr>
+                      <tr className={isProfitable ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}>
+                        <td className="py-2 px-3 font-bold">NET VALUE</td>
+                        <td className="py-2 px-3 text-muted-foreground">Incremental Profit - Total Costs</td>
+                        <td className={`py-2 px-3 text-right font-bold text-lg ${netValue >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          {formatCurrency(netValue)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Critical Assumptions */}
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  Critical Assumptions
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-500 mt-1">•</span>
+                    <span>
+                      <strong>Counterfactual:</strong> Assumes Club members would behave like non-members if they hadn't joined.
+                      This may overstate benefits if Club attracts already-high-value customers.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-500 mt-1">•</span>
+                    <span>
+                      <strong>Attribution:</strong> All profit difference is attributed to Club membership.
+                      True incrementality unknown due to selection bias.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-500 mt-1">•</span>
+                    <span>
+                      <strong>Operational costs:</strong> Not included (staff, technology, marketing for Club).
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Understanding Cashback Cost Metrics Accordion */}
+      <Collapsible open={isCashbackOpen} onOpenChange={setIsCashbackOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-orange-500" />
+                <CardTitle className="text-base">Understanding Cashback Cost Metrics</CardTitle>
+                <Badge variant="outline" className="ml-auto">
+                  {isCashbackOpen ? "Click to collapse" : "Click to expand"}
+                </Badge>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-900">
+                  <h4 className="font-semibold text-orange-700 dark:text-orange-400">Total Redeemed</h4>
+                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(pdfData.totalCashbackCost)}</p>
+                  <p className="text-xs text-orange-600 mt-1">26,507 redemption events × 98 DKK avg</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Avg Redemption</h4>
+                  <p className="text-2xl font-bold">98 DKK</p>
+                  <p className="text-xs text-muted-foreground mt-1">Per redemption event</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Redemption Rate</h4>
+                  <p className="text-2xl font-bold">35.2%</p>
+                  <p className="text-xs text-muted-foreground mt-1">Of Club orders use cashback</p>
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                  <strong>Note:</strong> Cashback is earned on purchases (3-5% of order value) and redeemed on
+                  subsequent purchases. The cost shown is the actual redeemed amount, which represents real
+                  money paid out to customers.
+                </p>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Shipping Subsidy Explanation & Country Breakdown Accordion */}
+      <Collapsible open={isShippingOpen} onOpenChange={setIsShippingOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-base">Shipping Subsidy Explanation & Country Breakdown</CardTitle>
+                <Badge variant="outline" className="ml-auto">
+                  {isShippingOpen ? "Click to collapse" : "Click to expand"}
+                </Badge>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
+                <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2">What is Shipping Subsidy?</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  Club members get free shipping at a <strong>lower order value</strong> than non-Club customers.
+                  Orders between the Club threshold and standard threshold qualify for free shipping, but
+                  Trendhim must cover the shipping cost (the "subsidy").
+                </p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Total Subsidy</h4>
+                  <p className="text-2xl font-bold text-red-600">-{formatCurrency(pdfData.shippingSubsidy)}</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Subsidized Orders</h4>
+                  <p className="text-2xl font-bold">{formatNumber(27959)}</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold">Avg Subsidy</h4>
+                  <p className="text-2xl font-bold">~30 DKK</p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b bg-muted">
+                      <th className="text-left py-2 px-3">Country</th>
+                      <th className="text-right py-2 px-3">Std Threshold</th>
+                      <th className="text-right py-2 px-3">Club Threshold</th>
+                      <th className="text-right py-2 px-3">Subsidized Orders</th>
+                      <th className="text-right py-2 px-3">Total Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {countryShippingData.map((row) => (
+                      <tr key={row.country} className="border-b">
+                        <td className="py-2 px-3 font-medium">{row.country}</td>
+                        <td className="py-2 px-3 text-right">{row.threshold}</td>
+                        <td className="py-2 px-3 text-right text-green-600">{row.clubThreshold}</td>
+                        <td className="py-2 px-3 text-right">{formatNumber(row.subsidizedOrders)}</td>
+                        <td className="py-2 px-3 text-right text-red-600">{formatCurrency(row.subsidyCost)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-muted">
+                      <td className="py-2 px-3 font-bold">TOTAL</td>
+                      <td className="py-2 px-3"></td>
+                      <td className="py-2 px-3"></td>
+                      <td className="py-2 px-3 text-right font-bold">{formatNumber(27959)}</td>
+                      <td className="py-2 px-3 text-right font-bold text-red-600">{formatCurrency(pdfData.shippingSubsidy)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Understanding Incremental Profit Metrics Accordion */}
+      <Collapsible open={isIncrementalOpen} onOpenChange={setIsIncrementalOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+                <CardTitle className="text-base">Understanding Incremental Profit Metrics</CardTitle>
+                <Badge variant="outline" className="ml-auto">
+                  {isIncrementalOpen ? "Click to collapse" : "Click to expand"}
+                </Badge>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Incremental Profit Calculation</h4>
+                <div className="bg-muted p-4 rounded-lg font-mono text-sm">
+                  <p>Incremental Profit = (Club Avg Profit - Non-Club Avg Profit) × Club Orders</p>
+                  <p className="mt-2">= ({pdfData.clubAvgProfit} DKK - {pdfData.nonClubAvgProfit} DKK) × {formatNumber(pdfData.clubOrders)}</p>
+                  <p className="mt-2">= {pdfData.profitDifference.toFixed(2)} DKK × {formatNumber(pdfData.clubOrders)}</p>
+                  <p className="mt-2 font-bold text-green-600">= +{formatCurrency(pdfData.incrementalProfit)}</p>
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-1">Key Assumption</h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                      This assumes that without the Club program, Club members would behave exactly like
+                      non-Club customers. If Club attracts already-higher-value customers (selection bias),
+                      the true incremental value may be <strong>significantly lower or even zero</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Sensitivity Analysis Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-muted-foreground" />
+            <CardTitle>Sensitivity Analysis</CardTitle>
+          </div>
+          <CardDescription>
+            How would ROI change under different scenarios?
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b bg-muted">
+                  <th className="text-left py-2 px-3">Scenario</th>
+                  <th className="text-right py-2 px-3">Profit Diff</th>
+                  <th className="text-right py-2 px-3">Incr. Profit</th>
+                  <th className="text-right py-2 px-3">Total Costs</th>
+                  <th className="text-right py-2 px-3">Net Value</th>
+                  <th className="text-right py-2 px-3">ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sensitivityData.map((row, index) => (
+                  <tr key={row.scenario} className={`border-b ${index === 0 ? "bg-muted/50" : ""}`}>
+                    <td className="py-2 px-3 font-medium">{row.scenario}</td>
+                    <td className="py-2 px-3 text-right">{row.profitDiff.toFixed(2)} DKK</td>
+                    <td className="py-2 px-3 text-right text-green-600">{formatCurrency(row.incrementalProfit)}</td>
+                    <td className="py-2 px-3 text-right text-red-600">{formatCurrency(row.costs)}</td>
+                    <td className="py-2 px-3 text-right font-bold text-red-600">{formatCurrency(row.netValue)}</td>
+                    <td className="py-2 px-3 text-right font-bold text-red-600">{row.roi.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Even with +100% higher profit difference or 50% lower cashback costs, the program remains
+            unprofitable. The gap between incremental profit and costs is too large to overcome with
+            realistic improvements.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Benefits vs Costs Breakdown */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Benefits */}
+        <Card className="border-green-200 dark:border-green-900">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+              <CardTitle className="text-green-700 dark:text-green-400">Program Benefits</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b">
+                <div>
+                  <p className="font-medium">Incremental Profit</p>
+                  <p className="text-xs text-muted-foreground">Extra profit from Club orders</p>
+                </div>
+                <span className="font-bold text-green-600">+{formatCurrency(pdfData.incrementalProfit)}</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>Calculation: +{pdfData.profitDifference.toFixed(2)} DKK/order × {formatNumber(pdfData.clubOrders)} orders</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Costs */}
+        <Card className="border-red-200 dark:border-red-900">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-500" />
+              <CardTitle className="text-red-700 dark:text-red-400">Program Costs</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b">
+                <div>
+                  <p className="font-medium">Cashback Redeemed</p>
+                  <p className="text-xs text-muted-foreground">Total DKK paid out</p>
+                </div>
+                <span className="font-bold text-red-600">-{formatCurrency(pdfData.totalCashbackCost)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <div>
+                  <p className="font-medium">Shipping Subsidy</p>
+                  <p className="text-xs text-muted-foreground">27,959 subsidized orders</p>
+                </div>
+                <span className="font-bold text-red-600">-{formatCurrency(pdfData.shippingSubsidy)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 bg-red-50 dark:bg-red-950/30 px-2 rounded">
+                <p className="font-bold">Total Program Costs</p>
+                <span className="font-bold text-red-600">-{formatCurrency(pdfData.totalProgramCosts)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Key Metrics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profit Comparison: Club vs Non-Club</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Club Avg Profit</p>
+              <p className="text-2xl font-bold">{pdfData.clubAvgProfit} DKK</p>
+              <p className="text-xs text-muted-foreground">per order</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Non-Club Avg Profit</p>
+              <p className="text-2xl font-bold">{pdfData.nonClubAvgProfit} DKK</p>
+              <p className="text-xs text-muted-foreground">per order</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Difference</p>
+              <p className="text-2xl font-bold text-green-600">
+                +{pdfData.profitDifference.toFixed(2)} DKK
+              </p>
+              <p className="text-xs text-muted-foreground">per order</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">% Difference</p>
+              <p className="text-2xl font-bold text-green-600">
+                +{pdfData.profitDifferencePercent.toFixed(1)}%
+              </p>
+              <p className="text-xs text-muted-foreground">Club advantage</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Understanding the Profitability Conclusion Accordion */}
+      <Collapsible open={isProfitabilityOpen} onOpenChange={setIsProfitabilityOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-base">Understanding the Profitability Conclusion</CardTitle>
+                <Badge variant="outline" className="ml-auto">
+                  {isProfitabilityOpen ? "Click to collapse" : "Click to expand"}
+                </Badge>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <p className="text-red-700 dark:text-red-400">
+                <strong>The program is not generating positive net value.</strong> Program costs (cashback + shipping)
+                exceed the incremental profit from Club orders by a factor of <strong>33x</strong>.
+              </p>
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-semibold mb-2">The Core Problem</h4>
+                <p className="text-sm text-muted-foreground">
+                  The profit difference per order (+{pdfData.profitDifference.toFixed(2)} DKK) is too small to offset
+                  the program costs. To break even, Club orders would need to generate
+                  <strong> ~46 DKK more profit per order</strong> - a 33x increase from the current {pdfData.profitDifference.toFixed(2)} DKK.
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                  <strong>Final Caveat:</strong> True incrementality unknown. If Club attracts already-valuable customers
+                  who would have purchased anyway, the actual incremental value may be even lower than calculated,
+                  making the true program economics even worse than shown.
+                </p>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+    </div>
+  );
+}

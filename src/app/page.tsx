@@ -1,0 +1,347 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KPICards } from "./_components/kpi-cards";
+import { FilterSidebar } from "./_components/filter-sidebar";
+import { ConclusionTab } from "./_components/tabs/conclusion";
+import { EvidenceSummaryTab } from "./_components/tabs/evidence-summary";
+import { ReturningOrdersTab } from "./_components/tabs/returning-orders";
+import { PurchaseFrequencyTab } from "./_components/tabs/purchase-frequency";
+import { LoyaltyProgressionTab } from "./_components/tabs/loyalty-progression";
+import { CashbackImpactTab } from "./_components/tabs/cashback-impact";
+import { BeforeAfterCashbackTab } from "./_components/tabs/before-after-cashback";
+import { SeasonalPatternsTab } from "./_components/tabs/seasonal-patterns";
+import { AverageOrderValueTab } from "./_components/tabs/average-order-value";
+import { OrderProfitTab } from "./_components/tabs/order-profit";
+import { ProgramROITab } from "./_components/tabs/program-roi";
+import { BreakEvenAnalysisTab } from "./_components/tabs/break-even-analysis";
+import { GhostMembersTab } from "./_components/tabs/ghost-members";
+import { FurtherInvestigationsTab } from "./_components/tabs/further-investigations";
+import { DataSourceTab } from "./_components/tabs/data-source";
+
+interface KPIs {
+  totalOrders: number;
+  clubOrders: number;
+  nonClubOrders: number;
+  clubPercentage: number;
+  totalRevenue: number;
+  clubRevenue: number;
+  nonClubRevenue: number;
+  clubRevenuePercentage: number;
+  avgOrderValue: number;
+  clubAOV: number;
+  nonClubAOV: number;
+  aovDifference: number;
+  aovDifferencePercent: number;
+  totalCustomers: number;
+  clubCustomers: number;
+  clubCustomerPercentage: number;
+}
+
+interface OrdersData {
+  month: string;
+  total: number;
+  clubCount: number;
+  nonClubCount: number;
+  revenue: number;
+}
+
+interface ComparisonData {
+  club: {
+    orders: number;
+    avgOrderValue: number;
+    totalRevenue: number;
+  };
+  nonClub: {
+    orders: number;
+    avgOrderValue: number;
+    totalRevenue: number;
+  };
+}
+
+interface SegmentData {
+  month: string;
+  loyal: number;
+  returning: number;
+  new: number;
+  inactive: number;
+}
+
+interface AOVData {
+  month: string;
+  currency: string;
+  avgOrderValue: number;
+  clubAOV: number;
+  nonClubAOV: number;
+}
+
+interface ProfitData {
+  month: string;
+  revenue: number;
+  profit: number;
+  productCost: number;
+  freightCost: number;
+  paymentCost: number;
+  clubProfit: number;
+  nonClubProfit: number;
+  profitMargin: number;
+}
+
+interface CashbackData {
+  totalCashback: number;
+  customerCount: number;
+  avgBalance: number;
+}
+
+interface FrequencyData {
+  group: string;
+  customerCount: number;
+  avgOrders: number;
+  medianOrders: number;
+  repeatRate: number;
+  loyalRate: number;
+}
+
+interface FilterOptions {
+  countries: string[];
+  currencies: string[];
+  months: string[];
+}
+
+export default function AnalyticsPage() {
+  const [kpis, setKPIs] = useState<KPIs | null>(null);
+  const [ordersData, setOrdersData] = useState<OrdersData[]>([]);
+  const [comparisonData, setComparisonData] = useState<ComparisonData | null>(
+    null
+  );
+  const [segmentData, setSegmentData] = useState<SegmentData[]>([]);
+  const [aovData, setAOVData] = useState<AOVData[]>([]);
+  const [profitData, setProfitData] = useState<ProfitData[]>([]);
+  const [cashbackData, setCashbackData] = useState<CashbackData | null>(null);
+  const [frequencyData, setFrequencyData] = useState<FrequencyData[] | null>(null);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    countries: [],
+    currencies: [],
+    months: [],
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("");
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (countryCode && countryCode !== "all")
+      params.set("countryCode", countryCode);
+    if (currencyCode && currencyCode !== "all")
+      params.set("currencyCode", currencyCode);
+    return params.toString();
+  };
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    const queryString = buildQueryString();
+
+    try {
+      const [
+        kpisRes,
+        ordersRes,
+        comparisonRes,
+        segmentsRes,
+        aovRes,
+        profitRes,
+        cashbackRes,
+        frequencyRes,
+        optionsRes,
+      ] = await Promise.all([
+        fetch(`/api/analytics/kpis?${queryString}`),
+        fetch(`/api/analytics/orders?${queryString}`),
+        fetch(`/api/analytics/orders?type=comparison&${queryString}`),
+        fetch(`/api/analytics/segments?${queryString}`),
+        fetch(`/api/analytics/profit?type=aov&${queryString}`),
+        fetch(`/api/analytics/profit?${queryString}`),
+        fetch(`/api/analytics/cashback`),
+        fetch(`/api/analytics/frequency`),
+        fetch(`/api/analytics/segments?type=options`),
+      ]);
+
+      if (kpisRes.ok) setKPIs(await kpisRes.json());
+      if (ordersRes.ok) setOrdersData(await ordersRes.json());
+      if (comparisonRes.ok) setComparisonData(await comparisonRes.json());
+      if (segmentsRes.ok) setSegmentData(await segmentsRes.json());
+      if (aovRes.ok) setAOVData(await aovRes.json());
+      if (profitRes.ok) setProfitData(await profitRes.json());
+      if (cashbackRes.ok) setCashbackData(await cashbackRes.json());
+      if (frequencyRes.ok) setFrequencyData(await frequencyRes.json());
+      if (optionsRes.ok) setFilterOptions(await optionsRes.json());
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [startDate, endDate, countryCode, currencyCode]);
+
+  const handleReset = () => {
+    setStartDate("");
+    setEndDate("");
+    setCountryCode("");
+    setCurrencyCode("");
+  };
+
+  const tabs = [
+    { value: "conclusion", label: "Conclusion" },
+    { value: "evidence", label: "Evidence Summary" },
+    { value: "returning-orders", label: "H1: Returning Orders" },
+    { value: "purchase-frequency", label: "H2: Purchase Freq" },
+    { value: "loyalty-progression", label: "H3: Loyalty" },
+    { value: "cashback-impact", label: "H4: Cashback" },
+    { value: "before-after", label: "H5: Before/After" },
+    { value: "seasonal", label: "H6: Seasonal" },
+    { value: "aov", label: "H7: AOV" },
+    { value: "profit", label: "H8: Profit" },
+    { value: "roi", label: "H9: ROI" },
+    { value: "break-even", label: "Break-Even" },
+    { value: "ghost-members", label: "Ghost Members" },
+    { value: "investigations", label: "Further Analysis" },
+    { value: "data", label: "Data Source" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <header className="sticky top-0 z-50 border-b bg-white dark:bg-zinc-900">
+        <div className="container mx-auto flex h-16 items-center gap-4 px-4">
+          <h1 className="text-xl font-semibold">Trendhim Club Analytics</h1>
+        </div>
+      </header>
+
+      <div className="container mx-auto grid gap-6 p-4 lg:grid-cols-[250px_1fr]">
+        <aside className="hidden lg:block">
+          <div className="sticky top-20">
+            <FilterSidebar
+              startDate={startDate}
+              endDate={endDate}
+              countryCode={countryCode}
+              currencyCode={currencyCode}
+              countries={filterOptions.countries}
+              currencies={filterOptions.currencies}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onCountryChange={setCountryCode}
+              onCurrencyChange={setCurrencyCode}
+              onReset={handleReset}
+            />
+          </div>
+        </aside>
+
+        <main className="space-y-6">
+          <KPICards
+            totalOrders={kpis?.totalOrders || 0}
+            totalRevenue={kpis?.totalRevenue || 0}
+            clubPercentage={kpis?.clubPercentage || 0}
+            avgOrderValue={kpis?.avgOrderValue || 0}
+            isLoading={isLoading}
+          />
+
+          <Tabs defaultValue="conclusion" className="w-full">
+            <TabsList className="w-full flex-wrap justify-start gap-1 h-auto p-1">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="text-xs sm:text-sm"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <TabsContent value="conclusion" className="mt-6">
+              <ConclusionTab kpis={kpis} />
+            </TabsContent>
+
+            <TabsContent value="evidence" className="mt-6">
+              <EvidenceSummaryTab />
+            </TabsContent>
+
+            <TabsContent value="returning-orders" className="mt-6">
+              <ReturningOrdersTab
+                ordersData={ordersData}
+                comparisonData={comparisonData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="purchase-frequency" className="mt-6">
+              <PurchaseFrequencyTab
+                frequencyData={frequencyData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="loyalty-progression" className="mt-6">
+              <LoyaltyProgressionTab
+                segmentData={segmentData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="cashback-impact" className="mt-6">
+              <CashbackImpactTab
+                cashbackData={cashbackData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="before-after" className="mt-6">
+              <BeforeAfterCashbackTab isLoading={isLoading} />
+            </TabsContent>
+
+            <TabsContent value="seasonal" className="mt-6">
+              <SeasonalPatternsTab
+                ordersData={ordersData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="aov" className="mt-6">
+              <AverageOrderValueTab aovData={aovData} isLoading={isLoading} />
+            </TabsContent>
+
+            <TabsContent value="profit" className="mt-6">
+              <OrderProfitTab profitData={profitData} isLoading={isLoading} />
+            </TabsContent>
+
+            <TabsContent value="roi" className="mt-6">
+              <ProgramROITab isLoading={isLoading} />
+            </TabsContent>
+
+            <TabsContent value="break-even" className="mt-6">
+              <BreakEvenAnalysisTab />
+            </TabsContent>
+
+            <TabsContent value="ghost-members" className="mt-6">
+              <GhostMembersTab />
+            </TabsContent>
+
+            <TabsContent value="investigations" className="mt-6">
+              <FurtherInvestigationsTab />
+            </TabsContent>
+
+            <TabsContent value="data" className="mt-6">
+              <DataSourceTab />
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </div>
+  );
+}

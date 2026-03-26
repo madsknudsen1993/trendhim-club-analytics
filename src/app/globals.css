@@ -1,0 +1,267 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Trendhim Brand Colors */
+  --color-moss: #06402B;
+  --color-moss-hover: #085234;
+  --color-moss-light: #0A6B42;
+  --color-off-white: #FAF6F0;
+  --color-black: #1C1B15;
+  --color-error: #CA546C;
+
+  /* Status colors */
+  --color-status-positive: var(--color-moss);
+  --color-status-warning: #9C9486;
+  --color-status-negative: var(--color-error);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Converted from oklch() to hex for html2canvas compatibility */
+  --background: #ffffff;
+  --foreground: #1c1b15;
+  --card: #ffffff;
+  --card-foreground: #1c1b15;
+  --popover: #ffffff;
+  --popover-foreground: #1c1b15;
+  --primary: #2d2d2a;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #2d2d2a;
+  --muted: #f5f5f4;
+  --muted-foreground: #737373;
+  --accent: #f5f5f4;
+  --accent-foreground: #2d2d2a;
+  --destructive: #dc2626;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a3a3a3;
+  --chart-1: #ea580c;
+  --chart-2: #0d9488;
+  --chart-3: #475569;
+  --chart-4: #eab308;
+  --chart-5: #f59e0b;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #1c1b15;
+  --sidebar-primary: #2d2d2a;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f5f5f4;
+  --sidebar-accent-foreground: #2d2d2a;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a3a3a3;
+}
+
+/* Trendhim Dark Theme - Dashboard */
+.dark {
+  /* Base backgrounds - warm black tones */
+  --background: #1C1B15;
+  --foreground: #FAF6F0;
+
+  /* Cards - slightly lighter than background */
+  --card: #22211A;
+  --card-foreground: #FAF6F0;
+
+  /* Popovers */
+  --popover: #22211A;
+  --popover-foreground: #FAF6F0;
+
+  /* Primary - Moss Green */
+  --primary: #06402B;
+  --primary-foreground: #FAF6F0;
+
+  /* Secondary */
+  --secondary: rgba(250, 246, 240, 0.04);
+  --secondary-foreground: #FAF6F0;
+
+  /* Muted */
+  --muted: rgba(250, 246, 240, 0.04);
+  --muted-foreground: rgba(250, 246, 240, 0.6);
+
+  /* Accent - Moss Green */
+  --accent: rgba(6, 64, 43, 0.12);
+  --accent-foreground: #FAF6F0;
+
+  /* Destructive - Error Red */
+  --destructive: #CA546C;
+
+  /* Borders */
+  --border: rgba(250, 246, 240, 0.06);
+  --input: rgba(250, 246, 240, 0.04);
+  --ring: #06402B;
+
+  /* Chart colors - Trendhim palette */
+  --chart-1: #06402B;  /* Primary green */
+  --chart-2: #486069;  /* Dark Blue 300 */
+  --chart-3: #7CA68E;  /* Mint 200 */
+  --chart-4: #9C9486;  /* Summer Sand 300 */
+  --chart-5: #CA546C;  /* Red */
+  --chart-6: #8BA2AE;  /* Baby Blue 200 */
+  --chart-7: #6E8C7C;  /* Mint 300 */
+
+  /* Sidebar - darker than main bg */
+  --sidebar: #151410;
+  --sidebar-foreground: rgba(250, 246, 240, 0.6);
+  --sidebar-primary: #06402B;
+  --sidebar-primary-foreground: #FAF6F0;
+  --sidebar-accent: rgba(6, 64, 43, 0.15);
+  --sidebar-accent-foreground: #7CA68E;
+  --sidebar-border: rgba(250, 246, 240, 0.06);
+  --sidebar-ring: #06402B;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Trendhim Dashboard Utilities */
+@layer utilities {
+  /* Text hierarchy */
+  .text-primary-value {
+    color: #FAF6F0;
+  }
+  .text-secondary-value {
+    color: rgba(250, 246, 240, 0.6);
+  }
+  .text-tertiary {
+    color: rgba(250, 246, 240, 0.35);
+  }
+  .text-muted-value {
+    color: rgba(250, 246, 240, 0.2);
+  }
+
+  /* Status colors */
+  .text-positive {
+    color: #06402B;
+  }
+  .text-warning {
+    color: #9C9486;
+  }
+  .text-negative {
+    color: #CA546C;
+  }
+
+  .bg-positive {
+    background-color: rgba(6, 64, 43, 0.12);
+  }
+  .bg-warning {
+    background-color: rgba(156, 148, 134, 0.1);
+  }
+  .bg-negative {
+    background-color: rgba(202, 84, 108, 0.1);
+  }
+
+  /* Card hover */
+  .bg-card-hover {
+    background-color: #2A2922;
+  }
+
+  /* Table zebra stripe */
+  .bg-table-alt {
+    background-color: rgba(250, 246, 240, 0.02);
+  }
+
+  /* Button shadows */
+  .shadow-primary {
+    box-shadow: 0 2px 12px rgba(6, 64, 43, 0.3);
+  }
+
+  /* Border utilities */
+  .border-subtle {
+    border-color: rgba(250, 246, 240, 0.03);
+  }
+  .border-strong {
+    border-color: rgba(250, 246, 240, 0.12);
+  }
+
+  /* Accent surface */
+  .bg-accent-surface {
+    background-color: rgba(6, 64, 43, 0.12);
+  }
+  .border-accent-surface {
+    border-color: rgba(6, 64, 43, 0.25);
+  }
+
+  /* Heat badge colors for CVR% values */
+  .badge-heat-high {
+    background-color: rgba(6, 64, 43, 0.15);
+    color: #06402B;
+  }
+  .badge-heat-medium {
+    background-color: rgba(72, 96, 105, 0.12);
+    color: #486069;
+  }
+  .badge-heat-low {
+    background-color: rgba(156, 148, 134, 0.1);
+    color: #9C9486;
+  }
+  .badge-heat-poor {
+    background-color: rgba(202, 84, 108, 0.1);
+    color: #CA546C;
+  }
+
+  /* Funnel gradient colors */
+  .funnel-1 { background-color: #06402B; }
+  .funnel-2 { background-color: #486069; }
+  .funnel-3 { background-color: #5D7078; }
+  .funnel-4 { background-color: #6E8C7C; }
+  .funnel-5 { background-color: #7CA68E; }
+  .funnel-6 { background-color: #8BA2AE; }
+  .funnel-7 { background-color: #97AFB8; }
+
+  /* Sparkline colors */
+  .sparkline-up { color: #06402B; }
+  .sparkline-down { color: #CA546C; }
+  .sparkline-neutral { color: #5B5D68; }
+}
