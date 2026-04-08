@@ -1,67 +1,40 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/chart-config";
-import { ShoppingCart, DollarSign, Users, TrendingUp } from "lucide-react";
+import { ShoppingCart, DollarSign, Users, TrendingDown } from "lucide-react";
+import { CORE_METRICS } from "./tabs/data-source";
 
-interface KPICardsProps {
-  totalOrders: number;
-  totalRevenue: number;
-  clubPercentage: number;
-  avgOrderValue: number;
-  isLoading?: boolean;
-}
-
-export function KPICards({
-  totalOrders,
-  totalRevenue,
-  clubPercentage,
-  avgOrderValue,
-  isLoading,
-}: KPICardsProps) {
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-32" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
+// All values from CORE_METRICS (Single Source of Truth)
+export function KPICards() {
   const kpis = [
     {
       title: "Total Orders",
-      value: formatNumber(totalOrders),
+      value: formatNumber(CORE_METRICS.orders.total),
+      subtitle: "Apr 2025 - Jan 2026",
       icon: ShoppingCart,
       color: "text-blue-600",
     },
     {
       title: "Total Revenue",
-      value: formatCurrency(totalRevenue),
+      value: formatCurrency(CORE_METRICS.revenue.total),
+      subtitle: "All markets (DKK)",
       icon: DollarSign,
       color: "text-green-600",
     },
     {
-      title: "Club Members",
-      value: formatPercent(clubPercentage),
+      title: "Club Orders",
+      value: formatPercent(CORE_METRICS.orders.clubPercentage),
+      subtitle: "of total orders",
       icon: Users,
       color: "text-purple-600",
     },
     {
-      title: "Avg Order Value",
-      value: formatCurrency(avgOrderValue),
-      icon: TrendingUp,
-      color: "text-orange-600",
+      title: "Program ROI",
+      value: `${CORE_METRICS.value.roi}%`,
+      subtitle: "Not profitable",
+      icon: TrendingDown,
+      color: "text-red-600",
     },
   ];
 
@@ -75,6 +48,7 @@ export function KPICards({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{kpi.value}</div>
+            <p className="text-xs text-muted-foreground">{kpi.subtitle}</p>
           </CardContent>
         </Card>
       ))}

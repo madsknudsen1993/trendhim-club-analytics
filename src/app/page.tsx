@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KPICards } from "./_components/kpi-cards";
 import { FilterSidebar } from "./_components/filter-sidebar";
 import { ConclusionTab } from "./_components/tabs/conclusion";
-import { EvidenceSummaryTab } from "./_components/tabs/evidence-summary";
 import { ReturningOrdersTab } from "./_components/tabs/returning-orders";
 import { PurchaseFrequencyTab } from "./_components/tabs/purchase-frequency";
 import { LoyaltyProgressionTab } from "./_components/tabs/loyalty-progression";
@@ -18,26 +16,8 @@ import { ProgramROITab } from "./_components/tabs/program-roi";
 import { BreakEvenAnalysisTab } from "./_components/tabs/break-even-analysis";
 import { GhostMembersTab } from "./_components/tabs/ghost-members";
 import { FurtherInvestigationsTab } from "./_components/tabs/further-investigations";
+import { OrderHistoryByCustomerTab } from "./_components/tabs/order-history-by-customer";
 import { DataSourceTab } from "./_components/tabs/data-source";
-
-interface KPIs {
-  totalOrders: number;
-  clubOrders: number;
-  nonClubOrders: number;
-  clubPercentage: number;
-  totalRevenue: number;
-  clubRevenue: number;
-  nonClubRevenue: number;
-  clubRevenuePercentage: number;
-  avgOrderValue: number;
-  clubAOV: number;
-  nonClubAOV: number;
-  aovDifference: number;
-  aovDifferencePercent: number;
-  totalCustomers: number;
-  clubCustomers: number;
-  clubCustomerPercentage: number;
-}
 
 interface OrdersData {
   month: string;
@@ -88,12 +68,6 @@ interface ProfitData {
   profitMargin: number;
 }
 
-interface CashbackData {
-  totalCashback: number;
-  customerCount: number;
-  avgBalance: number;
-}
-
 interface FrequencyData {
   group: string;
   customerCount: number;
@@ -110,7 +84,6 @@ interface FilterOptions {
 }
 
 export default function AnalyticsPage() {
-  const [kpis, setKPIs] = useState<KPIs | null>(null);
   const [ordersData, setOrdersData] = useState<OrdersData[]>([]);
   const [comparisonData, setComparisonData] = useState<ComparisonData | null>(
     null
@@ -118,7 +91,6 @@ export default function AnalyticsPage() {
   const [segmentData, setSegmentData] = useState<SegmentData[]>([]);
   const [aovData, setAOVData] = useState<AOVData[]>([]);
   const [profitData, setProfitData] = useState<ProfitData[]>([]);
-  const [cashbackData, setCashbackData] = useState<CashbackData | null>(null);
   const [frequencyData, setFrequencyData] = useState<FrequencyData[] | null>(null);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     countries: [],
@@ -143,40 +115,34 @@ export default function AnalyticsPage() {
     return params.toString();
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     const queryString = buildQueryString();
 
     try {
       const [
-        kpisRes,
         ordersRes,
         comparisonRes,
         segmentsRes,
         aovRes,
         profitRes,
-        cashbackRes,
         frequencyRes,
         optionsRes,
       ] = await Promise.all([
-        fetch(`/api/analytics/kpis?${queryString}`),
         fetch(`/api/analytics/orders?${queryString}`),
         fetch(`/api/analytics/orders?type=comparison&${queryString}`),
         fetch(`/api/analytics/segments?${queryString}`),
         fetch(`/api/analytics/profit?type=aov&${queryString}`),
         fetch(`/api/analytics/profit?${queryString}`),
-        fetch(`/api/analytics/cashback`),
         fetch(`/api/analytics/frequency`),
         fetch(`/api/analytics/segments?type=options`),
       ]);
 
-      if (kpisRes.ok) setKPIs(await kpisRes.json());
       if (ordersRes.ok) setOrdersData(await ordersRes.json());
       if (comparisonRes.ok) setComparisonData(await comparisonRes.json());
       if (segmentsRes.ok) setSegmentData(await segmentsRes.json());
       if (aovRes.ok) setAOVData(await aovRes.json());
       if (profitRes.ok) setProfitData(await profitRes.json());
-      if (cashbackRes.ok) setCashbackData(await cashbackRes.json());
       if (frequencyRes.ok) setFrequencyData(await frequencyRes.json());
       if (optionsRes.ok) setFilterOptions(await optionsRes.json());
     } catch (error) {
@@ -184,11 +150,29 @@ export default function AnalyticsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startDate, endDate, countryCode, currencyCode]);
+
+  // Debounce filter changes to prevent rapid-fire API requests
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, countryCode, currencyCode]);
+    // Clear any existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Set a new timeout for debounced fetch
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchData();
+    }, 300);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [fetchData]);
 
   const handleReset = () => {
     setStartDate("");
@@ -199,7 +183,6 @@ export default function AnalyticsPage() {
 
   const tabs = [
     { value: "conclusion", label: "Conclusion" },
-    { value: "evidence", label: "Evidence Summary" },
     { value: "returning-orders", label: "H1: Returning Orders" },
     { value: "purchase-frequency", label: "H2: Purchase Freq" },
     { value: "loyalty-progression", label: "H3: Loyalty" },
@@ -212,6 +195,7 @@ export default function AnalyticsPage() {
     { value: "break-even", label: "Break-Even" },
     { value: "ghost-members", label: "Ghost Members" },
     { value: "investigations", label: "Further Analysis" },
+    { value: "order-history", label: "Order History" },
     { value: "data", label: "Data Source" },
   ];
 
@@ -243,14 +227,6 @@ export default function AnalyticsPage() {
         </aside>
 
         <main className="space-y-6">
-          <KPICards
-            totalOrders={kpis?.totalOrders || 0}
-            totalRevenue={kpis?.totalRevenue || 0}
-            clubPercentage={kpis?.clubPercentage || 0}
-            avgOrderValue={kpis?.avgOrderValue || 0}
-            isLoading={isLoading}
-          />
-
           <Tabs defaultValue="conclusion" className="w-full">
             <TabsList className="w-full flex-wrap justify-start gap-1 h-auto p-1">
               {tabs.map((tab) => (
@@ -265,11 +241,7 @@ export default function AnalyticsPage() {
             </TabsList>
 
             <TabsContent value="conclusion" className="mt-6">
-              <ConclusionTab kpis={kpis} />
-            </TabsContent>
-
-            <TabsContent value="evidence" className="mt-6">
-              <EvidenceSummaryTab />
+              <ConclusionTab />
             </TabsContent>
 
             <TabsContent value="returning-orders" className="mt-6">
@@ -295,10 +267,7 @@ export default function AnalyticsPage() {
             </TabsContent>
 
             <TabsContent value="cashback-impact" className="mt-6">
-              <CashbackImpactTab
-                cashbackData={cashbackData}
-                isLoading={isLoading}
-              />
+              <CashbackImpactTab isLoading={isLoading} />
             </TabsContent>
 
             <TabsContent value="before-after" className="mt-6">
@@ -334,6 +303,10 @@ export default function AnalyticsPage() {
 
             <TabsContent value="investigations" className="mt-6">
               <FurtherInvestigationsTab />
+            </TabsContent>
+
+            <TabsContent value="order-history" className="mt-6">
+              <OrderHistoryByCustomerTab />
             </TabsContent>
 
             <TabsContent value="data" className="mt-6">

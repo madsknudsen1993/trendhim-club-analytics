@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,23 +23,6 @@ import {
 } from "@/components/ui/collapsible";
 import { formatNumber, formatCurrency } from "@/lib/chart-config";
 import { CORE_METRICS } from "./data-source";
-
-interface ROIData {
-  clubTotalProfit: number;
-  nonClubTotalProfit: number;
-  clubAvgProfit: number;
-  nonClubAvgProfit: number;
-  profitDifference: number;
-  profitDifferencePercent: number;
-  clubOrders: number;
-  incrementalProfit: number;
-  totalCashbackCost: number;
-  shippingSubsidy: number;
-  totalProgramCosts: number;
-  netValue: number;
-  roi: number;
-  isProfitable: boolean;
-}
 
 interface ProgramROITabProps {
   isLoading: boolean;
@@ -67,8 +50,6 @@ const sensitivityData = [
 ];
 
 export function ProgramROITab({ isLoading: parentLoading }: ProgramROITabProps) {
-  const [roiData, setRoiData] = useState<ROIData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
   const [isCashbackOpen, setIsCashbackOpen] = useState(false);
   const [isShippingOpen, setIsShippingOpen] = useState(false);
@@ -96,25 +77,7 @@ export function ProgramROITab({ isLoading: parentLoading }: ProgramROITabProps) 
     isProfitable: CORE_METRICS.value.roi >= 0,
   };
 
-  useEffect(() => {
-    const fetchROI = async () => {
-      try {
-        const response = await fetch("/api/analytics/roi");
-        if (response.ok) {
-          const data = await response.json();
-          setRoiData(data);
-        }
-      } catch (error) {
-        console.error("Error fetching ROI data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchROI();
-  }, []);
-
-  if (isLoading || parentLoading) {
+  if (parentLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-48 w-full" />

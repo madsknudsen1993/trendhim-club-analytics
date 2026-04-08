@@ -32,28 +32,33 @@ import {
   TrendingUp,
   Minus,
 } from "lucide-react";
-
-interface CashbackData {
-  totalCashback: number;
-  customerCount: number;
-  avgBalance: number;
-}
+import { CORE_METRICS } from "./data-source";
 
 interface CashbackImpactTabProps {
-  cashbackData: CashbackData | null;
   isLoading: boolean;
 }
 
-// Cashback segment data from PDF Data Source - Read Me tab (Feb 2026)
-// Note: The PDF shows only 2 segments for the 57,968 verified club members:
-// - Has Cashback Balance > 0: 20,052 (34.6%)
-// - Zero Balance: 37,916 (65.4%)
-// Zero Balance is AMBIGUOUS - could be redeemed OR never earned
+// Cashback segment data from CORE_METRICS (Single Source of Truth)
+// Note: The PDF shows only 2 segments for the verified club members:
+// - Has Cashback Balance > 0
+// - Zero Balance (AMBIGUOUS - could be redeemed OR never earned)
 const cashbackSegments = {
-  hasBalance: { count: 20052, percentage: 34.6, avgOrders: 1.52, avgAOV: 498, loyalRate: 8.2 },
-  zeroBalance: { count: 37916, percentage: 65.4, avgOrders: 1.18, avgAOV: 485, loyalRate: 4.1 },
+  hasBalance: {
+    count: CORE_METRICS.cashbackSegments.hasBalance.count,
+    percentage: CORE_METRICS.cashbackSegments.hasBalance.percentage,
+    avgOrders: 1.52,
+    avgAOV: 498,
+    loyalRate: 8.2
+  },
+  zeroBalance: {
+    count: CORE_METRICS.cashbackSegments.zeroBalance.count,
+    percentage: CORE_METRICS.cashbackSegments.zeroBalance.percentage,
+    avgOrders: 1.18,
+    avgAOV: 485,
+    loyalRate: 4.1
+  },
   // noRecord kept for backwards compatibility - represents "no cashback activity" subset of zeroBalance
-  // In reality, all 57,968 are from the cashback file, so there is no true "noRecord" segment
+  // In reality, all verified club members are from the cashback file
   noRecord: { count: 0, percentage: 0, avgOrders: 0, avgAOV: 0, loyalRate: 0 },
 };
 
@@ -72,7 +77,6 @@ const loyaltyByStatus = [
 ];
 
 export function CashbackImpactTab({
-  cashbackData,
   isLoading,
 }: CashbackImpactTabProps) {
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
@@ -128,18 +132,18 @@ export function CashbackImpactTab({
         </CardContent>
       </Card>
 
-      {/* Key Metrics Cards */}
+      {/* Key Metrics Cards - Using CORE_METRICS */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Cashback Outstanding
+              Total Cashback (Balance)
             </CardTitle>
             <Wallet className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cashbackData ? formatCurrency(cashbackData.totalCashback) : "~6.9M DKK"}
+              {formatCurrency(CORE_METRICS.cashback.totalCashbackAmount)}
             </div>
             <p className="text-xs text-muted-foreground">Unredeemed balance across all customers</p>
           </CardContent>
@@ -154,10 +158,10 @@ export function CashbackImpactTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatNumber(cashbackSegments.hasBalance.count)}
+              {formatNumber(CORE_METRICS.customers.customersWithCashback)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {cashbackSegments.hasBalance.percentage}% of Club members
+              {CORE_METRICS.cashbackSegments.hasBalance.percentage}% of Club members
             </p>
           </CardContent>
         </Card>
@@ -171,7 +175,7 @@ export function CashbackImpactTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cashbackData ? formatCurrency(cashbackData.avgBalance) : "~220 DKK"}
+              {formatCurrency(CORE_METRICS.cashback.avgCashbackPerRecord)}
             </div>
             <p className="text-xs text-muted-foreground">Per customer with balance</p>
           </CardContent>

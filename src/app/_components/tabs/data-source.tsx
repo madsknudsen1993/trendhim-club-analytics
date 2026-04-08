@@ -89,19 +89,19 @@ export const CORE_METRICS = {
     differenceDKK: 1,
   },
   costs: {
-    cashbackRedeemed: 2605323,  // Actual redeemed amount (not total balance)
-    cashbackOrderCount: 26507,  // From PDF: 26,507 redemptions
-    avgCashbackPerOrder: 98,    // From PDF: avg 98 DKK
+    cashbackRedeemed: 3605323,  // Total cashback amount from cashback file (SUM WHERE amount > 0)
+    cashbackOrderCount: 26587,  // Records with cashback > 0 from cashback file
+    avgCashbackPerOrder: 86,    // Average per record from cashback file
     shippingSubsidy: 838770,
     shippingSubsidyOrderCount: 27959,
     avgShippingSubsidy: 30,
-    totalProgramCosts: 3444093,  // 2,605,323 + 838,770
+    totalProgramCosts: 4444093,  // 3,605,323 + 838,770
   },
   value: {
     incrementalProfit: 102835,   // From PDF Final Conclusion
-    netValue: -3341259,          // 102,835 - 3,444,093
-    monthlyNetLoss: 334126,      // 3,341,259 / 10 months
-    roi: -97.0,                  // From PDF
+    netValue: -4341258,          // 102,835 - 4,444,093
+    monthlyNetLoss: 434126,      // 4,341,258 / 10 months
+    roi: -97.7,                  // (netValue / totalProgramCosts) × 100
   },
   frequency: {
     club: 1.30,
