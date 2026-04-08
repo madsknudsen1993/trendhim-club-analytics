@@ -113,6 +113,50 @@ export const CORE_METRICS = {
     cashbackFile: 71441,
     profitFile: 1565116,
   },
+  // Order History Longitudinal Analysis (Before/After Club)
+  orderHistory: {
+    // Data source
+    dataSource: "orders + cashback_from_merged.parquet (joined on customerId)",
+    dateRange: "2023-01-01 to 2026-03-02",
+    totalOrdersAnalyzed: 2542645,
+
+    // Sample info
+    totalClubMembersWithHistory: 70882,  // Club members with any order history
+    robustSampleSize: 4640,              // Members meeting strict criteria
+    robustSampleCriteria: "60+ days AND 2+ orders in BOTH before/after periods",
+
+    // Before Club metrics (same customers)
+    before: {
+      totalOrders: 15243,
+      totalCustomerMonths: 27972,
+      frequency: 0.545,           // orders per customer per month
+      avgOrderValue: 467.70,      // DKK
+      profitPerOrder: 226.42,     // DKK
+      monthlyProfit: 123.41,      // frequency × profit per order
+    },
+
+    // After Club metrics (same customers)
+    after: {
+      totalOrders: 18764,
+      totalCustomerMonths: 27588,
+      frequency: 0.680,           // orders per customer per month
+      avgOrderValue: 432.07,      // DKK
+      profitPerOrder: 206.93,     // DKK
+      monthlyProfit: 140.76,      // frequency × profit per order
+    },
+
+    // Calculated changes
+    changes: {
+      frequencyChange: 24.8,           // % increase
+      aovChange: -7.6,                 // % decrease
+      profitPerOrderChange: -8.6,      // % decrease
+      monthlyProfitChange: 14.1,       // % increase
+      incrementalMonthlyValue: 17.35,  // DKK per member per month
+    },
+
+    // Key insight
+    insight: "Volume wins: +24.8% more orders outweighs -8.6% lower profit per order",
+  },
 };
 
 // FX Rates from PDF
@@ -480,6 +524,140 @@ export function DataSourceTab() {
               </TableRow>
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* Order History Longitudinal Analysis */}
+      <Card className="border-2 border-blue-300 dark:border-blue-700">
+        <CardHeader className="pb-3 bg-blue-50 dark:bg-blue-950/30">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            <CardTitle className="text-base">Order History: Longitudinal Analysis (Before/After Club)</CardTitle>
+          </div>
+          <CardDescription>
+            Tracks the <strong>same customers</strong> before AND after joining Club to prove <strong>causal</strong> behavior change
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Data Source Info */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="grid gap-2 md:grid-cols-3 text-sm">
+              <div><strong>Data Source:</strong> {CORE_METRICS.orderHistory.dataSource}</div>
+              <div><strong>Date Range:</strong> {CORE_METRICS.orderHistory.dateRange}</div>
+              <div><strong>Total Orders:</strong> {formatNumber(CORE_METRICS.orderHistory.totalOrdersAnalyzed)}</div>
+            </div>
+          </div>
+
+          {/* Sample Info */}
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead colSpan={4} className="text-center font-bold">Sample Selection</TableHead>
+              </TableRow>
+              <TableRow>
+                <TableHead>Metric</TableHead>
+                <TableHead className="text-right">Value</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Why</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Club Members with Order History</TableCell>
+                <TableCell className="text-right font-bold">{formatNumber(CORE_METRICS.orderHistory.totalClubMembersWithHistory)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">Members with at least 1 order before or after joining</TableCell>
+                <TableCell className="text-sm text-muted-foreground">Starting population</TableCell>
+              </TableRow>
+              <TableRow className="bg-blue-50/50 dark:bg-blue-950/20">
+                <TableCell className="font-medium text-blue-700 dark:text-blue-400">Robust Sample</TableCell>
+                <TableCell className="text-right font-bold text-blue-600">{formatNumber(CORE_METRICS.orderHistory.robustSampleSize)}</TableCell>
+                <TableCell className="text-sm text-blue-600">{CORE_METRICS.orderHistory.robustSampleCriteria}</TableCell>
+                <TableCell className="text-sm text-blue-600">Ensures enough data to measure real patterns, not noise</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {/* Before/After Comparison */}
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead colSpan={5} className="text-center font-bold">Before vs After Club Comparison (Same {formatNumber(CORE_METRICS.orderHistory.robustSampleSize)} Customers)</TableHead>
+              </TableRow>
+              <TableRow>
+                <TableHead>Metric</TableHead>
+                <TableHead className="text-right">Before Club</TableHead>
+                <TableHead className="text-right">After Club</TableHead>
+                <TableHead className="text-right">Change</TableHead>
+                <TableHead>Calculation</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Total Orders</TableCell>
+                <TableCell className="text-right font-mono">{formatNumber(CORE_METRICS.orderHistory.before.totalOrders)}</TableCell>
+                <TableCell className="text-right font-mono">{formatNumber(CORE_METRICS.orderHistory.after.totalOrders)}</TableCell>
+                <TableCell className="text-right text-green-600">+{formatNumber(CORE_METRICS.orderHistory.after.totalOrders - CORE_METRICS.orderHistory.before.totalOrders)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">COUNT(orders)</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Customer-Months</TableCell>
+                <TableCell className="text-right font-mono">{formatNumber(CORE_METRICS.orderHistory.before.totalCustomerMonths)}</TableCell>
+                <TableCell className="text-right font-mono">{formatNumber(CORE_METRICS.orderHistory.after.totalCustomerMonths)}</TableCell>
+                <TableCell className="text-right">-</TableCell>
+                <TableCell className="text-sm text-muted-foreground">SUM(months active per customer)</TableCell>
+              </TableRow>
+              <TableRow className="bg-green-50/50 dark:bg-green-950/20">
+                <TableCell className="font-medium text-green-700">Frequency (orders/month)</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.before.frequency.toFixed(3)}</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.after.frequency.toFixed(3)}</TableCell>
+                <TableCell className="text-right font-bold text-green-600">+{CORE_METRICS.orderHistory.changes.frequencyChange}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">Orders ÷ Customer-Months</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Avg Order Value (DKK)</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.before.avgOrderValue.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.after.avgOrderValue.toFixed(2)}</TableCell>
+                <TableCell className="text-right text-red-600">{CORE_METRICS.orderHistory.changes.aovChange}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">AVG(order_value)</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Profit per Order (DKK)</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.before.profitPerOrder.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.after.profitPerOrder.toFixed(2)}</TableCell>
+                <TableCell className="text-right text-red-600">{CORE_METRICS.orderHistory.changes.profitPerOrderChange}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">AVG(profit per order)</TableCell>
+              </TableRow>
+              <TableRow className="bg-green-50/50 dark:bg-green-950/20">
+                <TableCell className="font-medium text-green-700">Monthly Profit (DKK)</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.before.monthlyProfit.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">{CORE_METRICS.orderHistory.after.monthlyProfit.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-bold text-green-600">+{CORE_METRICS.orderHistory.changes.monthlyProfitChange}%</TableCell>
+                <TableCell className="text-sm text-muted-foreground">Frequency × Profit/Order</TableCell>
+              </TableRow>
+              <TableRow className="bg-green-100 dark:bg-green-900/30">
+                <TableCell className="font-bold text-green-700">Incremental Value</TableCell>
+                <TableCell className="text-right" colSpan={2}></TableCell>
+                <TableCell className="text-right font-bold text-green-600 text-lg">+{CORE_METRICS.orderHistory.changes.incrementalMonthlyValue} DKK/mo</TableCell>
+                <TableCell className="text-sm text-green-600">{CORE_METRICS.orderHistory.after.monthlyProfit.toFixed(2)} - {CORE_METRICS.orderHistory.before.monthlyProfit.toFixed(2)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {/* Key Insight */}
+          <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg border border-green-300">
+            <p className="text-sm text-green-700 dark:text-green-400">
+              <strong>Key Insight:</strong> {CORE_METRICS.orderHistory.insight}
+            </p>
+          </div>
+
+          {/* Caveat */}
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200">
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              <strong>⚠️ Caveat:</strong> The robust sample of {formatNumber(CORE_METRICS.orderHistory.robustSampleSize)} is highly engaged members.
+              The {formatNumber(CORE_METRICS.customers.totalClub - CORE_METRICS.orderHistory.robustSampleSize)} other members may show different behavior.
+              Requiring 2+ orders BEFORE may also exclude "activated" customers who increased from 1 order to many.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

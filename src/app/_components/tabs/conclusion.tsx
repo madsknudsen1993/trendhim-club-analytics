@@ -48,32 +48,32 @@ function formatCurrency(num: number): string {
 }
 
 // ============================================================================
-// DATA - All raw numbers used in calculations
+// DATA - All raw numbers used in calculations (from CORE_METRICS)
 // ============================================================================
 
-// From Order History longitudinal analysis (robust sample)
+// From Order History longitudinal analysis (robust sample) - sourced from CORE_METRICS
 const ORDER_HISTORY = {
   // Sample info
-  robustSampleSize: 4640,
-  totalClubMembersWithHistory: 70882,
-  totalOrdersAnalyzed: 2542645,
-  dateRange: "2023-01-01 to 2026-03-02",
+  robustSampleSize: CORE_METRICS.orderHistory.robustSampleSize,
+  totalClubMembersWithHistory: CORE_METRICS.orderHistory.totalClubMembersWithHistory,
+  totalOrdersAnalyzed: CORE_METRICS.orderHistory.totalOrdersAnalyzed,
+  dateRange: CORE_METRICS.orderHistory.dateRange,
 
   // Before Club metrics (same customers)
-  beforeOrders: 15243, // Total orders before Club for robust sample
-  beforeMonths: 27972, // Total customer-months before Club
-  beforeFrequency: 0.545, // orders per customer per month
-  beforeAOV: 467.70,
-  beforeProfitPerOrder: 226.42,
-  beforeMonthlyProfit: 123.41, // frequency × profit per order
+  beforeOrders: CORE_METRICS.orderHistory.before.totalOrders,
+  beforeMonths: CORE_METRICS.orderHistory.before.totalCustomerMonths,
+  beforeFrequency: CORE_METRICS.orderHistory.before.frequency,
+  beforeAOV: CORE_METRICS.orderHistory.before.avgOrderValue,
+  beforeProfitPerOrder: CORE_METRICS.orderHistory.before.profitPerOrder,
+  beforeMonthlyProfit: CORE_METRICS.orderHistory.before.monthlyProfit,
 
   // After Club metrics (same customers)
-  afterOrders: 18764, // Total orders after Club for robust sample
-  afterMonths: 27588, // Total customer-months after Club
-  afterFrequency: 0.680, // orders per customer per month
-  afterAOV: 432.07,
-  afterProfitPerOrder: 206.93,
-  afterMonthlyProfit: 140.76, // frequency × profit per order
+  afterOrders: CORE_METRICS.orderHistory.after.totalOrders,
+  afterMonths: CORE_METRICS.orderHistory.after.totalCustomerMonths,
+  afterFrequency: CORE_METRICS.orderHistory.after.frequency,
+  afterAOV: CORE_METRICS.orderHistory.after.avgOrderValue,
+  afterProfitPerOrder: CORE_METRICS.orderHistory.after.profitPerOrder,
+  afterMonthlyProfit: CORE_METRICS.orderHistory.after.monthlyProfit,
 };
 
 // Program costs from CORE_METRICS (10 month period)

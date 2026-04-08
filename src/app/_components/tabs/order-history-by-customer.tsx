@@ -869,10 +869,6 @@ export function OrderHistoryByCustomerTab() {
                 <ZAxis type="number" dataKey="change" range={[50, 400]} />
                 <Tooltip
                   cursor={{ strokeDasharray: '3 3' }}
-                  formatter={(value: number, name: string) => [
-                    value.toFixed(2) + ' orders/mo',
-                    name === 'beforeFreq' ? 'Before Club' : 'After Club'
-                  ]}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
