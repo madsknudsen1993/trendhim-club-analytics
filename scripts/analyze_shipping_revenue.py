@@ -62,23 +62,29 @@ def analyze_robust_sample_shipping(order_history):
     before_calendar_months = (CLUB_LAUNCH_DATE - before_start).days / 30.44
     after_calendar_months = (after_end - CLUB_LAUNCH_DATE).days / 30.44
 
+    # Add free shipping flag
+    before_df['is_free_shipping'] = before_df['SHIPPING_GROSS_AMOUNT_DKK'] == 0
+    after_df['is_free_shipping'] = after_df['SHIPPING_GROSS_AMOUNT_DKK'] == 0
+
     # Find customers with 2+ orders AND 60+ days span in EACH period
     before_stats = before_df.groupby('UNIQUE_CUSTOMER_ID').agg({
         'ORDER_NUMBER': 'count',
         'COMPLETED_AT_DATE': ['min', 'max'],
         'SHIPPING_GROSS_AMOUNT_DKK': ['sum', 'mean'],
-        'PRODUCT_QUANTITY': 'mean'
+        'PRODUCT_QUANTITY': 'mean',
+        'is_free_shipping': 'mean'  # % of orders with free shipping
     })
-    before_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order']
+    before_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order', 'free_shipping_pct']
     before_stats['days_span'] = (before_stats['last_order'] - before_stats['first_order']).dt.days
 
     after_stats = after_df.groupby('UNIQUE_CUSTOMER_ID').agg({
         'ORDER_NUMBER': 'count',
         'COMPLETED_AT_DATE': ['min', 'max'],
         'SHIPPING_GROSS_AMOUNT_DKK': ['sum', 'mean'],
-        'PRODUCT_QUANTITY': 'mean'
+        'PRODUCT_QUANTITY': 'mean',
+        'is_free_shipping': 'mean'  # % of orders with free shipping
     })
-    after_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order']
+    after_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order', 'free_shipping_pct']
     after_stats['days_span'] = (after_stats['last_order'] - after_stats['first_order']).dt.days
 
     # Filter: 2+ orders AND 60+ days span
@@ -112,6 +118,11 @@ def analyze_robust_sample_shipping(order_history):
     avg_items_after = after_robust['avg_items_per_order'].mean()
     items_change_pct = ((avg_items_after / avg_items_before) - 1) * 100
 
+    # Free shipping percentage
+    free_shipping_pct_before = before_robust['free_shipping_pct'].mean() * 100
+    free_shipping_pct_after = after_robust['free_shipping_pct'].mean() * 100
+    free_shipping_change_pp = free_shipping_pct_after - free_shipping_pct_before
+
     # Monthly metrics per customer
     monthly_shipping_before = freq_before * avg_shipping_before
     monthly_shipping_after = freq_after * avg_shipping_after
@@ -124,6 +135,7 @@ def analyze_robust_sample_shipping(order_history):
     print(f"\n📊 BEFORE Club:")
     print(f"   Avg Items/Order: {avg_items_before:.2f}")
     print(f"   Avg Shipping/Order: {avg_shipping_before:.2f} DKK")
+    print(f"   Free Shipping %: {free_shipping_pct_before:.1f}%")
     print(f"   Frequency: {freq_before:.3f} orders/mo")
     print(f"   Monthly Items: {monthly_items_before:.2f} items/customer/mo")
     print(f"   Monthly Shipping Revenue: {monthly_shipping_before:.2f} DKK/customer/mo")
@@ -131,6 +143,7 @@ def analyze_robust_sample_shipping(order_history):
     print(f"\n📊 AFTER Club:")
     print(f"   Avg Items/Order: {avg_items_after:.2f}")
     print(f"   Avg Shipping/Order: {avg_shipping_after:.2f} DKK")
+    print(f"   Free Shipping %: {free_shipping_pct_after:.1f}%")
     print(f"   Frequency: {freq_after:.3f} orders/mo")
     print(f"   Monthly Items: {monthly_items_after:.2f} items/customer/mo")
     print(f"   Monthly Shipping Revenue: {monthly_shipping_after:.2f} DKK/customer/mo")
@@ -138,6 +151,7 @@ def analyze_robust_sample_shipping(order_history):
     print(f"\n📈 CHANGES:")
     print(f"   Items/Order: {items_change_pct:+.1f}%")
     print(f"   Shipping/Order: {shipping_change_pct:+.1f}%")
+    print(f"   Free Shipping: {free_shipping_change_pp:+.1f}pp")
     print(f"   Frequency: {((freq_after/freq_before)-1)*100:+.1f}%")
     print(f"   Monthly Items: {monthly_items_change:+.2f} items/customer/mo ({((monthly_items_after/monthly_items_before)-1)*100:+.1f}%)")
     print(f"   Monthly Shipping: {monthly_shipping_change:+.2f} DKK/customer/mo")
@@ -147,6 +161,7 @@ def analyze_robust_sample_shipping(order_history):
         'before': {
             'avg_items_per_order': round(avg_items_before, 2),
             'avg_shipping_per_order': round(avg_shipping_before, 2),
+            'free_shipping_pct': round(free_shipping_pct_before, 1),
             'frequency': round(freq_before, 3),
             'monthly_items': round(monthly_items_before, 2),
             'monthly_shipping': round(monthly_shipping_before, 2),
@@ -154,6 +169,7 @@ def analyze_robust_sample_shipping(order_history):
         'after': {
             'avg_items_per_order': round(avg_items_after, 2),
             'avg_shipping_per_order': round(avg_shipping_after, 2),
+            'free_shipping_pct': round(free_shipping_pct_after, 1),
             'frequency': round(freq_after, 3),
             'monthly_items': round(monthly_items_after, 2),
             'monthly_shipping': round(monthly_shipping_after, 2),
@@ -161,6 +177,7 @@ def analyze_robust_sample_shipping(order_history):
         'changes': {
             'items_per_order_pct': round(items_change_pct, 1),
             'shipping_per_order_pct': round(shipping_change_pct, 1),
+            'free_shipping_change_pp': round(free_shipping_change_pp, 1),
             'monthly_items_change': round(monthly_items_change, 2),
             'monthly_shipping_change': round(monthly_shipping_change, 2),
         }
@@ -186,21 +203,27 @@ def analyze_broader_sample_shipping(order_history):
     before_calendar_months = (CLUB_LAUNCH_DATE - before_start).days / 30.44
     after_calendar_months = (after_end - CLUB_LAUNCH_DATE).days / 30.44
 
+    # Add free shipping flag
+    before_df['is_free_shipping'] = before_df['SHIPPING_GROSS_AMOUNT_DKK'] == 0
+    after_df['is_free_shipping'] = after_df['SHIPPING_GROSS_AMOUNT_DKK'] == 0
+
     # Find customers matching criteria
     before_stats = before_df.groupby('UNIQUE_CUSTOMER_ID').agg({
         'ORDER_NUMBER': 'count',
         'SHIPPING_GROSS_AMOUNT_DKK': ['sum', 'mean'],
-        'PRODUCT_QUANTITY': 'mean'
+        'PRODUCT_QUANTITY': 'mean',
+        'is_free_shipping': 'mean'
     })
-    before_stats.columns = ['orders', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order']
+    before_stats.columns = ['orders', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order', 'free_shipping_pct']
 
     after_stats = after_df.groupby('UNIQUE_CUSTOMER_ID').agg({
         'ORDER_NUMBER': 'count',
         'COMPLETED_AT_DATE': ['min', 'max'],
         'SHIPPING_GROSS_AMOUNT_DKK': ['sum', 'mean'],
-        'PRODUCT_QUANTITY': 'mean'
+        'PRODUCT_QUANTITY': 'mean',
+        'is_free_shipping': 'mean'
     })
-    after_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order']
+    after_stats.columns = ['orders', 'first_order', 'last_order', 'total_shipping', 'avg_shipping_per_order', 'avg_items_per_order', 'free_shipping_pct']
     after_stats['days_span'] = (after_stats['last_order'] - after_stats['first_order']).dt.days
 
     # Filter: 1+ before AND (2+ orders AND 60+ days span) after
@@ -234,6 +257,11 @@ def analyze_broader_sample_shipping(order_history):
     avg_items_after = after_broader['avg_items_per_order'].mean()
     items_change_pct = ((avg_items_after / avg_items_before) - 1) * 100
 
+    # Free shipping percentage
+    free_shipping_pct_before = before_broader['free_shipping_pct'].mean() * 100
+    free_shipping_pct_after = after_broader['free_shipping_pct'].mean() * 100
+    free_shipping_change_pp = free_shipping_pct_after - free_shipping_pct_before
+
     # Monthly metrics per customer
     monthly_shipping_before = freq_before * avg_shipping_before
     monthly_shipping_after = freq_after * avg_shipping_after
@@ -246,6 +274,7 @@ def analyze_broader_sample_shipping(order_history):
     print(f"\n📊 BEFORE Club:")
     print(f"   Avg Items/Order: {avg_items_before:.2f}")
     print(f"   Avg Shipping/Order: {avg_shipping_before:.2f} DKK")
+    print(f"   Free Shipping %: {free_shipping_pct_before:.1f}%")
     print(f"   Frequency: {freq_before:.3f} orders/mo")
     print(f"   Monthly Items: {monthly_items_before:.2f} items/customer/mo")
     print(f"   Monthly Shipping Revenue: {monthly_shipping_before:.2f} DKK/customer/mo")
@@ -253,6 +282,7 @@ def analyze_broader_sample_shipping(order_history):
     print(f"\n📊 AFTER Club:")
     print(f"   Avg Items/Order: {avg_items_after:.2f}")
     print(f"   Avg Shipping/Order: {avg_shipping_after:.2f} DKK")
+    print(f"   Free Shipping %: {free_shipping_pct_after:.1f}%")
     print(f"   Frequency: {freq_after:.3f} orders/mo")
     print(f"   Monthly Items: {monthly_items_after:.2f} items/customer/mo")
     print(f"   Monthly Shipping Revenue: {monthly_shipping_after:.2f} DKK/customer/mo")
@@ -260,6 +290,7 @@ def analyze_broader_sample_shipping(order_history):
     print(f"\n📈 CHANGES:")
     print(f"   Items/Order: {items_change_pct:+.1f}%")
     print(f"   Shipping/Order: {shipping_change_pct:+.1f}%")
+    print(f"   Free Shipping: {free_shipping_change_pp:+.1f}pp")
     print(f"   Frequency: {((freq_after/freq_before)-1)*100:+.1f}%")
     print(f"   Monthly Items: {monthly_items_change:+.2f} items/customer/mo ({((monthly_items_after/monthly_items_before)-1)*100:+.1f}%)")
     print(f"   Monthly Shipping: {monthly_shipping_change:+.2f} DKK/customer/mo")
@@ -269,6 +300,7 @@ def analyze_broader_sample_shipping(order_history):
         'before': {
             'avg_items_per_order': round(avg_items_before, 2),
             'avg_shipping_per_order': round(avg_shipping_before, 2),
+            'free_shipping_pct': round(free_shipping_pct_before, 1),
             'frequency': round(freq_before, 3),
             'monthly_items': round(monthly_items_before, 2),
             'monthly_shipping': round(monthly_shipping_before, 2),
@@ -276,6 +308,7 @@ def analyze_broader_sample_shipping(order_history):
         'after': {
             'avg_items_per_order': round(avg_items_after, 2),
             'avg_shipping_per_order': round(avg_shipping_after, 2),
+            'free_shipping_pct': round(free_shipping_pct_after, 1),
             'frequency': round(freq_after, 3),
             'monthly_items': round(monthly_items_after, 2),
             'monthly_shipping': round(monthly_shipping_after, 2),
@@ -283,6 +316,7 @@ def analyze_broader_sample_shipping(order_history):
         'changes': {
             'items_per_order_pct': round(items_change_pct, 1),
             'shipping_per_order_pct': round(shipping_change_pct, 1),
+            'free_shipping_change_pp': round(free_shipping_change_pp, 1),
             'monthly_items_change': round(monthly_items_change, 2),
             'monthly_shipping_change': round(monthly_shipping_change, 2),
         }
@@ -346,18 +380,21 @@ def main():
     print("  before: {")
     print(f"    itemsPerOrder: {robust_results['before']['avg_items_per_order']},")
     print(f"    shippingPerOrder: {robust_results['before']['avg_shipping_per_order']},")
+    print(f"    freeShippingPct: {robust_results['before']['free_shipping_pct']},")
     print(f"    monthlyItems: {robust_results['before']['monthly_items']},")
     print(f"    monthlyShipping: {robust_results['before']['monthly_shipping']},")
     print("  },")
     print("  after: {")
     print(f"    itemsPerOrder: {robust_results['after']['avg_items_per_order']},")
     print(f"    shippingPerOrder: {robust_results['after']['avg_shipping_per_order']},")
+    print(f"    freeShippingPct: {robust_results['after']['free_shipping_pct']},")
     print(f"    monthlyItems: {robust_results['after']['monthly_items']},")
     print(f"    monthlyShipping: {robust_results['after']['monthly_shipping']},")
     print("  },")
     print("  changes: {")
     print(f"    itemsPerOrderPct: {robust_results['changes']['items_per_order_pct']},")
     print(f"    shippingPerOrderPct: {robust_results['changes']['shipping_per_order_pct']},")
+    print(f"    freeShippingChangePP: {robust_results['changes']['free_shipping_change_pp']},")
     print(f"    monthlyItemsChange: {robust_results['changes']['monthly_items_change']},")
     print(f"    monthlyShippingChange: {robust_results['changes']['monthly_shipping_change']},")
     print("  },")
@@ -368,18 +405,21 @@ def main():
     print("  before: {")
     print(f"    itemsPerOrder: {broader_results['before']['avg_items_per_order']},")
     print(f"    shippingPerOrder: {broader_results['before']['avg_shipping_per_order']},")
+    print(f"    freeShippingPct: {broader_results['before']['free_shipping_pct']},")
     print(f"    monthlyItems: {broader_results['before']['monthly_items']},")
     print(f"    monthlyShipping: {broader_results['before']['monthly_shipping']},")
     print("  },")
     print("  after: {")
     print(f"    itemsPerOrder: {broader_results['after']['avg_items_per_order']},")
     print(f"    shippingPerOrder: {broader_results['after']['avg_shipping_per_order']},")
+    print(f"    freeShippingPct: {broader_results['after']['free_shipping_pct']},")
     print(f"    monthlyItems: {broader_results['after']['monthly_items']},")
     print(f"    monthlyShipping: {broader_results['after']['monthly_shipping']},")
     print("  },")
     print("  changes: {")
     print(f"    itemsPerOrderPct: {broader_results['changes']['items_per_order_pct']},")
     print(f"    shippingPerOrderPct: {broader_results['changes']['shipping_per_order_pct']},")
+    print(f"    freeShippingChangePP: {broader_results['changes']['free_shipping_change_pp']},")
     print(f"    monthlyItemsChange: {broader_results['changes']['monthly_items_change']},")
     print(f"    monthlyShippingChange: {broader_results['changes']['monthly_shipping_change']},")
     print("  },")

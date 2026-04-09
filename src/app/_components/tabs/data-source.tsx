@@ -263,18 +263,21 @@ export const CORE_METRICS = {
       before: {
         itemsPerOrder: 2.20,
         shippingPerOrder: 21.79,
+        freeShippingPct: 38.3,
         monthlyItems: 0.49,
         monthlyShipping: 4.89,
       },
       after: {
         itemsPerOrder: 2.19,
         shippingPerOrder: 22.34,
+        freeShippingPct: 38.0,
         monthlyItems: 0.73,
         monthlyShipping: 7.46,
       },
       changes: {
         itemsPerOrderPct: -0.3,
         shippingPerOrderPct: 2.5,
+        freeShippingChangePP: -0.3,
         monthlyItemsChange: 0.24,
         monthlyShippingChange: 2.57,
       },
@@ -321,18 +324,21 @@ export const CORE_METRICS = {
         before: {
           itemsPerOrder: 2.09,
           shippingPerOrder: 22.11,
+          freeShippingPct: 36.6,
           monthlyItems: 0.28,
           monthlyShipping: 2.98,
         },
         after: {
           itemsPerOrder: 2.08,
           shippingPerOrder: 22.47,
+          freeShippingPct: 37.4,
           monthlyItems: 0.60,
           monthlyShipping: 6.53,
         },
         changes: {
           itemsPerOrderPct: -0.6,
           shippingPerOrderPct: 1.6,
+          freeShippingChangePP: 0.7,
           monthlyItemsChange: 0.32,
           monthlyShippingChange: 3.56,
         },

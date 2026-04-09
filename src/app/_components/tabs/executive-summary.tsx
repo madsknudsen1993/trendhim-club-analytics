@@ -139,6 +139,9 @@ const BEST_CUSTOMERS = {
   beforeShippingPerOrder: CORE_METRICS.orderHistory.orderBehavior.before.shippingPerOrder,
   afterShippingPerOrder: CORE_METRICS.orderHistory.orderBehavior.after.shippingPerOrder,
   shippingPerOrderChange: CORE_METRICS.orderHistory.orderBehavior.changes.shippingPerOrderPct,
+  beforeFreeShippingPct: CORE_METRICS.orderHistory.orderBehavior.before.freeShippingPct,
+  afterFreeShippingPct: CORE_METRICS.orderHistory.orderBehavior.after.freeShippingPct,
+  freeShippingChangePP: CORE_METRICS.orderHistory.orderBehavior.changes.freeShippingChangePP,
 };
 
 // Segment 3: Medium Customers (Broader Sample - 1+ order before, 2+ after)
@@ -175,6 +178,9 @@ const MEDIUM_CUSTOMERS = {
   beforeShippingPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.before.shippingPerOrder,
   afterShippingPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.after.shippingPerOrder,
   shippingPerOrderChange: CORE_METRICS.orderHistory.broaderSample.orderBehavior.changes.shippingPerOrderPct,
+  beforeFreeShippingPct: CORE_METRICS.orderHistory.broaderSample.orderBehavior.before.freeShippingPct,
+  afterFreeShippingPct: CORE_METRICS.orderHistory.broaderSample.orderBehavior.after.freeShippingPct,
+  freeShippingChangePP: CORE_METRICS.orderHistory.broaderSample.orderBehavior.changes.freeShippingChangePP,
 };
 
 // Segment 4: Fresh Customers (Period comparison - before/after Club launch)
@@ -438,8 +444,10 @@ export function ExecutiveSummaryTab() {
                     <p className="text-xs text-red-700">Net Value (10 months)</p>
                     <p className="text-2xl font-bold text-red-600">{formatCurrency(CLUB_PROGRAM.netValue)}</p>
                   </div>
-                  <div className="p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded text-[10px] text-muted-foreground">
-                    <strong>Limitation:</strong> Cross-sectional analysis. Does NOT track same customers over time.
+                  <div className="p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded text-[10px] text-muted-foreground space-y-1">
+                    <p><strong>Finding:</strong> Club orders have +{CLUB_PROGRAM.frequencyDifferencePercent}% higher frequency but {CLUB_PROGRAM.profitDifference} DKK lower profit/order due to cashback.</p>
+                    <p><strong>Limitation:</strong> Cross-sectional. Does NOT track same customers over time.</p>
+                    <p><strong>Action:</strong> Use longitudinal segments (Best/Medium) for true behavior change.</p>
                   </div>
                 </div>
               </div>
@@ -512,6 +520,12 @@ export function ExecutiveSummaryTab() {
                         <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterShippingPerOrder.toFixed(0)} DKK</td>
                         <td className="py-1 text-right font-mono text-purple-600">+{BEST_CUSTOMERS.shippingPerOrderChange}%</td>
                       </tr>
+                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
+                        <td className="py-1 text-purple-700">Free Shipping %</td>
+                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeFreeShippingPct}%</td>
+                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterFreeShippingPct}%</td>
+                        <td className="py-1 text-right font-mono text-purple-600">{BEST_CUSTOMERS.freeShippingChangePP}pp</td>
+                      </tr>
                       <tr className="border-b">
                         <td className="py-1">Frequency</td>
                         <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
@@ -540,6 +554,9 @@ export function ExecutiveSummaryTab() {
                   </table>
                   <div className="mt-2 p-1.5 bg-blue-50/50 dark:bg-blue-950/20 rounded text-[10px] text-blue-600">
                     Monthly Profit = Frequency × Profit/Order
+                  </div>
+                  <div className="mt-2 p-2 bg-purple-50/50 dark:bg-purple-950/20 rounded text-[10px] text-purple-700">
+                    <strong>Order Behavior:</strong> Slightly smaller orders ({BEST_CUSTOMERS.itemsPerOrderChange}% items) but free shipping % unchanged ({BEST_CUSTOMERS.freeShippingChangePP}pp). Club members order more frequently with similar basket composition.
                   </div>
                 </div>
 
@@ -579,8 +596,10 @@ export function ExecutiveSummaryTab() {
                     <p className="text-2xl font-bold text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
                     <p className="text-[10px] text-green-600 mt-1">Sample: {formatNumber(BEST_CUSTOMERS.sampleSize)} customers</p>
                   </div>
-                  <div className="p-2 bg-green-100/50 dark:bg-green-900/20 rounded text-[10px] text-muted-foreground">
-                    <strong>Strength:</strong> Longitudinal analysis proves causal behavior change.
+                  <div className="p-2 bg-green-100/50 dark:bg-green-900/20 rounded text-[10px] text-muted-foreground space-y-1">
+                    <p><strong>Finding:</strong> +{BEST_CUSTOMERS.frequencyChange}% frequency lift, +{BEST_CUSTOMERS.monthlyProfitChange}% monthly profit despite lower profit/order.</p>
+                    <p><strong>Limitation:</strong> Elite sample (2+ orders both periods) - not representative of all members.</p>
+                    <p><strong>Action:</strong> Maximize engagement to move more members into this cohort.</p>
                   </div>
                 </div>
               </div>
@@ -653,6 +672,12 @@ export function ExecutiveSummaryTab() {
                         <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterShippingPerOrder.toFixed(0)} DKK</td>
                         <td className="py-1 text-right font-mono text-purple-600">+{MEDIUM_CUSTOMERS.shippingPerOrderChange}%</td>
                       </tr>
+                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
+                        <td className="py-1 text-purple-700">Free Shipping %</td>
+                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFreeShippingPct}%</td>
+                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterFreeShippingPct}%</td>
+                        <td className="py-1 text-right font-mono text-purple-600">+{MEDIUM_CUSTOMERS.freeShippingChangePP}pp</td>
+                      </tr>
                       <tr className="border-b">
                         <td className="py-1">Frequency</td>
                         <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
@@ -681,6 +706,9 @@ export function ExecutiveSummaryTab() {
                   </table>
                   <div className="mt-2 p-1.5 bg-blue-50/50 dark:bg-blue-950/20 rounded text-[10px] text-blue-600">
                     Monthly Profit = Frequency × Profit/Order
+                  </div>
+                  <div className="mt-2 p-2 bg-purple-50/50 dark:bg-purple-950/20 rounded text-[10px] text-purple-700">
+                    <strong>Order Behavior:</strong> Slightly smaller orders ({MEDIUM_CUSTOMERS.itemsPerOrderChange}% items) with free shipping % slightly up (+{MEDIUM_CUSTOMERS.freeShippingChangePP}pp). Lower threshold not cannibalizing revenue.
                   </div>
                 </div>
 
@@ -720,8 +748,10 @@ export function ExecutiveSummaryTab() {
                     <p className="text-2xl font-bold text-teal-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
                     <p className="text-[10px] text-teal-600 mt-1">Sample: {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} customers</p>
                   </div>
-                  <div className="p-2 bg-teal-100/50 dark:bg-teal-900/20 rounded text-[10px] text-teal-700">
-                    <strong>Why so positive?</strong> This sample includes many one-time buyers (38%) who became repeat customers after joining Club. The +{MEDIUM_CUSTOMERS.frequencyChange}% frequency lift reflects strong customer activation.
+                  <div className="p-2 bg-teal-100/50 dark:bg-teal-900/20 rounded text-[10px] text-teal-700 space-y-1">
+                    <p><strong>Finding:</strong> +{MEDIUM_CUSTOMERS.frequencyChange}% frequency lift. 38% one-time buyers converted to repeat.</p>
+                    <p><strong>Limitation:</strong> Broader sample includes regression-to-mean effects.</p>
+                    <p><strong>Action:</strong> Focus on converting one-time buyers to repeat customers via Club.</p>
                   </div>
                 </div>
               </div>
@@ -861,8 +891,10 @@ export function ExecutiveSummaryTab() {
                     <p className="text-xs text-amber-700">Est. Monthly Value</p>
                     <p className="text-2xl font-bold text-amber-600">{FRESH_CUSTOMERS.monthlyValue >= 0 ? '+' : ''}{formatCurrency(FRESH_CUSTOMERS.monthlyValue)}</p>
                   </div>
-                  <div className="p-2 bg-blue-100/50 dark:bg-blue-900/20 rounded text-[10px] text-muted-foreground">
-                    <strong>Note:</strong> ALL customers (Club + Non-Club). May reflect market trends.
+                  <div className="p-2 bg-blue-100/50 dark:bg-blue-900/20 rounded text-[10px] text-muted-foreground space-y-1">
+                    <p><strong>Finding:</strong> 1st→2nd order rate {FRESH_CUSTOMERS.rateLiftPP}pp change. Speed unchanged.</p>
+                    <p><strong>Limitation:</strong> ALL customers (Club + Non-Club). May reflect market trends.</p>
+                    <p><strong>Action:</strong> Monitor whether Club marketing drives overall repeat behavior.</p>
                   </div>
                 </div>
               </div>
