@@ -155,81 +155,188 @@ export const CORE_METRICS = {
     cashbackFile: 71441,
     profitFile: 1565116,
   },
+  // Fresh Customers Analysis: 1st → 2nd order conversion
+  // Measures whether Club ecosystem drives more first-time customers to return
+  // Data source: PowerBI Order History CSVs (2.8M orders, 1.9M unique customers)
+  freshCustomers: {
+    conversionWindow: 60, // days
+    // Customer identification: UNIQUE_CUSTOMER_ID from PowerBI Order History
+    // First order = earliest order date per customer
+    // Second order = next order date for same customer
+    customerIdentifier: "UNIQUE_CUSTOMER_ID",
+    beforePeriod: {
+      label: "Jan 2023 - Mar 2025",
+      start: "2023-01-01",
+      end: "2025-01-30", // -60 days for observation window
+      newCustomers: 1335330,
+      converted60d: 107614,
+      conversionRate: 8.06,
+      avgDaysToSecond: 16.62,  // Mean: 16.6179
+      medianDaysToSecond: 11,   // Validated median
+      stdDaysToSecond: 16.22,   // Standard deviation
+      avgSecondOrderProfit: 214.62,
+    },
+    afterPeriod: {
+      label: "Apr 2025 - Jan 2026",
+      start: "2025-04-01",
+      end: "2025-12-02", // -60 days for observation window
+      newCustomers: 340255,
+      converted60d: 24526,
+      conversionRate: 7.21,
+      avgDaysToSecond: 16.62,  // Mean: 16.6213 (diff: +0.003 days - validated!)
+      medianDaysToSecond: 10,   // Validated median
+      stdDaysToSecond: 15.92,   // Standard deviation
+      avgSecondOrderProfit: 197.10,
+    },
+    impact: {
+      rateLiftPP: -0.85, // percentage points
+      monthlyNewCustomers: 34026,
+      extraConversionsPerMonth: -289,
+      profitPerConversion: 197.10,
+      monthlyValue: -57005, // DKK
+    },
+    // Validation notes
+    avgDaysValidation: "Both periods show ~16.6 days avg (diff: +0.003 days). This is validated - customers who convert do so in similar timeframes regardless of period.",
+    note: "Measures ALL customers (Club + Non-Club). Tests if Club ecosystem/marketing drives overall repeat behavior. The decline may reflect broader market trends, seasonal effects, or measurement period differences.",
+  },
+  // Monthly cost visibility
+  monthlyCosts: {
+    monthlyMonths: 10, // Analysis period months
+    monthlyCashbackRedeemed: 360532, // ~3.6M / 10 months
+    monthlyShippingSubsidy: 81507,   // ~815K / 10 months
+    note: "Cashback is already reflected in profit figures. Shipping subsidy is the actual incremental cost.",
+  },
   // Order History Longitudinal Analysis (Before/After Club)
+  // METHODOLOGY: UNBIASED - Using fixed calendar periods, not first-to-last order span
+  // Before: 2023-01-01 to 2025-03-31 (26.97 months)
+  // After: 2025-04-01 to 2026-03-03 (11.04 months)
   orderHistory: {
     // Data source
     dataSource: "orders + cashback_from_merged.parquet (joined on customerId)",
-    dateRange: "2023-01-01 to 2026-03-02",
-    totalOrdersAnalyzed: 2542645,
+    dateRange: "2023-01-01 to 2026-03-03",
+    totalOrdersAnalyzed: 2813751,
+
+    // Calendar periods (UNBIASED methodology)
+    calendarMonthsBefore: 26.97,  // Full period before Club launch
+    calendarMonthsAfter: 11.04,   // Full period after Club launch
 
     // Sample info
     totalClubMembersWithHistory: 70882,  // Club members with any order history
-    robustSampleSize: 4640,              // Members meeting strict criteria
+    robustSampleSize: 5101,              // Members meeting strict criteria (updated)
     robustSampleCriteria: "60+ days AND 2+ orders in BOTH before/after periods",
 
-    // Before Club metrics (same customers)
+    // Before Club metrics (same 5,101 customers)
+    // Frequency = orders / (customers × calendar_months)
     before: {
-      totalOrders: 15243,
-      totalCustomerMonths: 27972,
-      frequency: 0.545,           // orders per customer per month
-      avgOrderValue: 467.70,      // DKK
-      profitPerOrder: 226.42,     // DKK
-      monthlyProfit: 123.41,      // frequency × profit per order
+      totalOrders: 30852,
+      totalCustomerMonths: 137580,  // 5,101 × 26.97 months
+      frequency: 0.224,             // orders per customer per month (UNBIASED)
+      avgOrderValue: 466.02,        // DKK
+      profitPerOrder: 225.80,       // DKK
+      monthlyProfit: 50.63,         // frequency × profit per order
     },
 
-    // After Club metrics (same customers)
+    // After Club metrics (same 5,101 customers)
     after: {
-      totalOrders: 18764,
-      totalCustomerMonths: 27588,
-      frequency: 0.680,           // orders per customer per month
-      avgOrderValue: 432.07,      // DKK
-      profitPerOrder: 206.93,     // DKK
-      monthlyProfit: 140.76,      // frequency × profit per order
+      totalOrders: 18792,
+      totalCustomerMonths: 56305,   // 5,101 × 11.04 months
+      frequency: 0.334,             // orders per customer per month (UNBIASED)
+      avgOrderValue: 433.47,        // DKK
+      profitPerOrder: 209.50,       // DKK
+      monthlyProfit: 69.92,         // frequency × profit per order
     },
 
     // Calculated changes
     changes: {
-      frequencyChange: 24.8,           // % increase
-      aovChange: -7.6,                 // % decrease
-      profitPerOrderChange: -8.6,      // % decrease
-      monthlyProfitChange: 14.1,       // % increase
-      incrementalMonthlyValue: 17.35,  // DKK per member per month
+      frequencyChange: 48.8,             // % increase (HIGHER with unbiased method!)
+      aovChange: -7.0,                   // % decrease
+      profitPerOrderChange: -7.2,        // % decrease
+      monthlyProfitChange: 38.1,         // % increase
+      incrementalMonthlyValue: 19.29,    // DKK per member per month
     },
 
     // Key insight
-    insight: "Volume wins: +24.8% more orders outweighs -8.6% lower profit per order",
+    insight: "Volume wins: +48.8% more orders outweighs -7.2% lower profit per order → +19.29 DKK/mo uplift",
 
-    // Broader sample (1+ orders before, 60d & 2+ orders after)
-    // Includes one-time buyers who were activated by Club
+    // Order behavior: items per order & shipping revenue
+    orderBehavior: {
+      before: {
+        itemsPerOrder: 2.20,
+        shippingPerOrder: 21.79,
+        monthlyItems: 0.49,
+        monthlyShipping: 4.89,
+      },
+      after: {
+        itemsPerOrder: 2.19,
+        shippingPerOrder: 22.34,
+        monthlyItems: 0.73,
+        monthlyShipping: 7.46,
+      },
+      changes: {
+        itemsPerOrderPct: -0.3,
+        shippingPerOrderPct: 2.5,
+        monthlyItemsChange: 0.24,
+        monthlyShippingChange: 2.57,
+      },
+    },
+
+    // Broader sample (1+ orders before, 60+ days AND 2+ orders after)
+    // UNBIASED methodology: same calendar periods for all customers
     broaderSample: {
-      sampleSize: 9604,
+      sampleSize: 10732,
       criteria: "1+ orders BEFORE, 60+ days & 2+ orders AFTER",
 
       // Breakdown
-      multiOrderBefore: 5860,   // 61% - already repeat customers
-      singleOrderBefore: 3744,  // 39% - one-time buyers activated
+      multiOrderBefore: 6703,    // 62% - already repeat customers
+      singleOrderBefore: 4029,   // 38% - one-time buyers activated
 
-      // Combined weighted metrics
+      // UNBIASED metrics using full calendar periods
       before: {
-        frequency: 0.652,
-        avgOrderValue: 462.65,
-        profitPerOrder: 228.47,
-        monthlyProfit: 149.00,
+        totalOrders: 38962,
+        totalCustomerMonths: 289454,  // 10,732 × 26.97 months
+        frequency: 0.135,             // orders per customer per month (UNBIASED)
+        avgOrderValue: 455.86,
+        profitPerOrder: 223.80,
+        monthlyProfit: 30.12,
       },
       after: {
-        frequency: 0.689,
-        avgOrderValue: 425.35,
-        profitPerOrder: 205.31,
-        monthlyProfit: 141.38,
+        totalOrders: 34443,
+        totalCustomerMonths: 118461,  // 10,732 × 11.04 months
+        frequency: 0.291,             // orders per customer per month (UNBIASED)
+        avgOrderValue: 422.93,
+        profitPerOrder: 205.70,
+        monthlyProfit: 59.81,
       },
       changes: {
-        frequencyChange: 5.6,
-        aovChange: -8.1,
-        profitPerOrderChange: -10.1,
-        monthlyProfitChange: -5.1,
-        incrementalMonthlyValue: -7.62,
+        frequencyChange: 116.0,           // % increase (was -5.1% with biased method!)
+        aovChange: -7.2,
+        profitPerOrderChange: -8.1,
+        monthlyProfitChange: 98.5,
+        incrementalMonthlyValue: 29.68,   // DKK/mo (was -7.62 with biased method!)
       },
-      insight: "Combined: moderate +5.6% frequency lift offset by -10.1% profit/order drop = -7.62 DKK/mo net",
+      insight: "CORRECTED: +116% frequency lift → +29.68 DKK/mo uplift (previous 'regression to mean' was calculation artifact)",
+
+      // Order behavior: items per order & shipping revenue
+      orderBehavior: {
+        before: {
+          itemsPerOrder: 2.09,
+          shippingPerOrder: 22.11,
+          monthlyItems: 0.28,
+          monthlyShipping: 2.98,
+        },
+        after: {
+          itemsPerOrder: 2.08,
+          shippingPerOrder: 22.47,
+          monthlyItems: 0.60,
+          monthlyShipping: 6.53,
+        },
+        changes: {
+          itemsPerOrderPct: -0.6,
+          shippingPerOrderPct: 1.6,
+          monthlyItemsChange: 0.32,
+          monthlyShippingChange: 3.56,
+        },
+      },
     },
   },
   // Monthly breakdown - April 2025 to February 2026

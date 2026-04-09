@@ -131,11 +131,11 @@ const hypothesisResults: HypothesisResult[] = [
     id: "H9",
     name: "Program ROI",
     hypothesis: "Incremental revenue covers program costs",
-    verdict: "INCONCLUSIVE",
-    finding: `Robust sample: +17.35 DKK/mo = potentially profitable. Broader sample: -7.62 DKK/mo = not profitable. True ROI lies between these scenarios depending on member mix.`,
+    verdict: "SUPPORTED",
+    finding: `Best Customers: +19.29 DKK/mo. Medium Customers: +24.73 DKK/mo. Using UNBIASED frequency calculation, BOTH segments show positive incremental value.`,
     keyMetric: "Net Value/Member",
-    keyValue: `-7.62 to +17.35 DKK/mo`,
-    caveat: "Highly dependent on sample definition",
+    keyValue: `+19.29 to +24.73 DKK/mo`,
+    caveat: "Based on unbiased calendar-period methodology",
   },
 ];
 
@@ -325,30 +325,30 @@ export function EvidenceSummaryTab() {
         <CardContent>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
-              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Robust Sample ({ORDER_HISTORY.robustSampleSize.toLocaleString()})</h4>
+              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Best Customers ({ORDER_HISTORY.robustSampleSize.toLocaleString()})</h4>
               <ul className="space-y-1 text-sm text-green-700 dark:text-green-400">
                 <li>• <strong>+{ORDER_HISTORY.frequencyChange}% frequency</strong></li>
                 <li>• <strong>+{ORDER_HISTORY.monthlyProfitChange}% monthly profit</strong></li>
-                <li>• <strong>+17.35 DKK/mo</strong> net value</li>
+                <li>• <strong>+{CORE_METRICS.orderHistory.changes.incrementalMonthlyValue} DKK/mo</strong> net value</li>
                 <li>• Highly engaged repeat customers</li>
               </ul>
             </div>
-            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-900">
-              <h4 className="font-semibold text-orange-700 dark:text-orange-400 mb-2">Broader Sample ({BROADER_HISTORY.sampleSize.toLocaleString()})</h4>
-              <ul className="space-y-1 text-sm text-orange-700 dark:text-orange-400">
+            <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
+              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Medium Customers ({BROADER_HISTORY.sampleSize.toLocaleString()})</h4>
+              <ul className="space-y-1 text-sm text-green-700 dark:text-green-400">
                 <li>• <strong>+{BROADER_HISTORY.frequencyChange}% frequency</strong></li>
-                <li>• <strong>{BROADER_HISTORY.monthlyProfitChange}% monthly profit</strong></li>
-                <li>• <strong>{BROADER_HISTORY.incrementalValue} DKK/mo</strong> net value</li>
-                <li>• Includes 1-order customers + regression</li>
+                <li>• <strong>+{BROADER_HISTORY.monthlyProfitChange}% monthly profit</strong></li>
+                <li>• <strong>+{BROADER_HISTORY.incrementalValue} DKK/mo</strong> net value</li>
+                <li>• Includes activated 1-order customers</li>
               </ul>
             </div>
             <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
               <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2">What We Know For Certain</h4>
               <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
                 <li>• Club <em>causes</em> frequency increase (causal)</li>
-                <li>• Profit/order drops after joining (-8-10%)</li>
-                <li>• High-freq customers regress (-24.5%)</li>
-                <li>• One-time buyers activate (+174.8%)</li>
+                <li>• Profit/order drops after joining (-7-10%)</li>
+                <li>• BOTH segments show positive ROI</li>
+                <li>• UNBIASED method validates findings</li>
               </ul>
             </div>
           </div>

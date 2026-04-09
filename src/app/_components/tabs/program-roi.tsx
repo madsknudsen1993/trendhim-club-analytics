@@ -42,14 +42,14 @@ const countryShippingData = [
 // USING MEDIAN for robustness (mean is skewed by high-value outliers)
 // Cross-sectional median: Club 158 DKK vs Non-Club 173 DKK = -15 DKK difference
 // The typical Club order generates LESS profit, BUT:
-// - Longitudinal analysis shows +24.8% frequency increase
-// - Volume gains (+17.35 DKK/mo per member) offset per-order deficit
+// - Longitudinal analysis shows +48.8% frequency increase (UNBIASED calculation)
+// - Volume gains (+19.29 DKK/mo per member) offset per-order deficit
 const sensitivityData = [
   { scenario: "Base Case (Median)", profitDiff: -15, orders: 75272, incrementalProfit: -1129080, costs: 0, netValue: -1129080, isProfitable: false },
   { scenario: "If Mean Used", profitDiff: 5, orders: 75272, incrementalProfit: 376360, costs: 0, netValue: 376360, isProfitable: true },
   { scenario: "If Deficit Halved", profitDiff: -7.5, orders: 75272, incrementalProfit: -564540, costs: 0, netValue: -564540, isProfitable: false },
   { scenario: "Break-Even Point", profitDiff: 0, orders: 75272, incrementalProfit: 0, costs: 0, netValue: 0, isProfitable: true },
-  { scenario: "Longitudinal View", profitDiff: null, orders: 75272, incrementalProfit: null, costs: 0, netValue: 869700, isProfitable: true, note: "+17.35 DKK/mo × 10mo × ~5000 active members" },
+  { scenario: "Longitudinal View", profitDiff: null, orders: 75272, incrementalProfit: null, costs: 0, netValue: 1179540, isProfitable: true, note: "+19.29 DKK/mo × 12mo × ~5101 customers" },
 ];
 
 export function ProgramROITab({ isLoading: parentLoading }: ProgramROITabProps) {

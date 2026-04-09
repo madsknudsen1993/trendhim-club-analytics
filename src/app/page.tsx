@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FilterSidebar } from "./_components/filter-sidebar";
 import { ConclusionTab } from "./_components/tabs/conclusion";
 import { ReturningOrdersTab } from "./_components/tabs/returning-orders";
 import { PurchaseFrequencyTab } from "./_components/tabs/purchase-frequency";
@@ -209,25 +208,7 @@ export default function AnalyticsPage() {
         </div>
       </header>
 
-      <div className="container mx-auto grid gap-6 p-4 lg:grid-cols-[250px_1fr]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-20">
-            <FilterSidebar
-              startDate={startDate}
-              endDate={endDate}
-              countryCode={countryCode}
-              currencyCode={currencyCode}
-              countries={filterOptions.countries}
-              currencies={filterOptions.currencies}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              onCountryChange={setCountryCode}
-              onCurrencyChange={setCurrencyCode}
-              onReset={handleReset}
-            />
-          </div>
-        </aside>
-
+      <div className="max-w-[1800px] mx-auto p-4">
         <main className="space-y-6">
           <Tabs defaultValue="executive-summary" className="w-full">
             <TabsList className="w-full flex-wrap justify-start gap-1 h-auto p-1">

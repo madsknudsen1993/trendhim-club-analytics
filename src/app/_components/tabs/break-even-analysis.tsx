@@ -62,7 +62,7 @@ export function BreakEvenAnalysisTab() {
   // Values from CORE_METRICS (Single Source of Truth in data-source.tsx)
   // NOTE: Using MEDIAN values - typical Club order has LOWER profit than typical Non-Club
   // Cross-sectional median: Club 158 DKK vs Non-Club 173 DKK = -15 DKK difference
-  // However, longitudinal analysis shows volume gains (+24.8% frequency) may offset this
+  // However, longitudinal analysis shows volume gains (+48.8% frequency, UNBIASED) offset this
   const data: ProgramData = {
     netValue: CORE_METRICS.value.netValue,                   // Negative with median
     monthlyNetLoss: CORE_METRICS.value.monthlyNetLoss,       // Monthly loss
@@ -108,10 +108,10 @@ export function BreakEvenAnalysisTab() {
   // Option 1: Higher AOV could offset the deficit
   const aovLiftNeeded = deficitPerOrder; // Need +15 DKK more profit to break even
 
-  // Option 2: Frequency gains (from longitudinal analysis)
-  // Longitudinal shows +24.8% frequency lift → more orders → may offset lower profit/order
-  const frequencyLift = CORE_METRICS.orderHistory.changes.frequencyChange; // 24.8%
-  const longitudinalIncrementalValue = CORE_METRICS.orderHistory.changes.incrementalMonthlyValue; // +17.35 DKK/mo
+  // Option 2: Frequency gains (from longitudinal analysis - UNBIASED method)
+  // Longitudinal shows +48.8% frequency lift → more orders → offsets lower profit/order
+  const frequencyLift = CORE_METRICS.orderHistory.changes.frequencyChange; // 48.8% (UNBIASED)
+  const longitudinalIncrementalValue = CORE_METRICS.orderHistory.changes.incrementalMonthlyValue; // +19.29 DKK/mo
 
   return (
     <div className="space-y-6">
@@ -355,7 +355,7 @@ export function BreakEvenAnalysisTab() {
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold mb-2">Target Best Customer Segments</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    "Best customers" segment shows +17.35 DKK/mo incremental value.
+                    &quot;Best customers&quot; segment shows +{longitudinalIncrementalValue.toFixed(2)} DKK/mo incremental value.
                   </p>
                   <p className="text-sm text-green-600">
                     Focus on repeat customers who respond most to Club

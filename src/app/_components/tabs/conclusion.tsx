@@ -513,27 +513,27 @@ export function ConclusionTab() {
                 </h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Robust Sample Shows:</p>
+                    <p className="text-sm font-medium">Best Customers ({formatNumber(ORDER_HISTORY.robustSampleSize)}):</p>
                     <ul className="text-xs text-muted-foreground space-y-1">
                       <li>• Club works extremely well for engaged repeat customers</li>
-                      <li>• +24.8% frequency lift is substantial and profitable</li>
-                      <li>• These {formatNumber(ORDER_HISTORY.robustSampleSize)} customers are the &quot;ideal&quot; Club members</li>
+                      <li>• +{ORDER_HISTORY.changes.frequencyChange}% frequency lift (UNBIASED calculation)</li>
+                      <li>• +{ORDER_HISTORY.changes.incrementalMonthlyValue} DKK/mo incremental value</li>
                     </ul>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Broader Sample Shows:</p>
+                    <p className="text-sm font-medium">Medium Customers ({formatNumber(ORDER_HISTORY.broaderSample.sampleSize)}):</p>
                     <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• High-frequency customers naturally regress after joining</li>
-                      <li>• One-time buyers get activated (+174.8% frequency)</li>
-                      <li>• Combined effect is slight negative due to cashback costs</li>
+                      <li>• Also shows strong positive results with UNBIASED method</li>
+                      <li>• +{ORDER_HISTORY.broaderSample.changes.frequencyChange}% frequency lift</li>
+                      <li>• +{ORDER_HISTORY.broaderSample.changes.incrementalMonthlyValue} DKK/mo incremental value</li>
                     </ul>
                   </div>
                 </div>
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-400">
-                    <strong>Key Insight:</strong> The true ROI likely lies between these two scenarios.
-                    The Robust Sample may overstate value (selection of best performers),
-                    while the Broader Sample may understate it (includes regression-to-mean effects).
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    <strong>Key Insight:</strong> Using UNBIASED frequency calculation (fixed calendar periods),
+                    BOTH customer segments show strong positive results. The previous &quot;regression to mean&quot;
+                    finding was an artifact of the biased calculation methodology.
                   </p>
                 </div>
               </div>

@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-04-09T20:49:06.071806",
+  "before_period": {
+    "period_name": "Before Club (Jan 2023 - Mar 2025)",
+    "period_start": "2023-01-01",
+    "period_end": "2025-01-30",
+    "new_customers": 1335330,
+    "converted_60d": 107614,
+    "conversion_rate": 8.06,
+    "avg_days_to_second": 16.6,
+    "avg_second_order_profit": 214.62
+  },
+  "after_period": {
+    "period_name": "After Club (Apr 2025 - Jan 2026)",
+    "period_start": "2025-04-01",
+    "period_end": "2025-12-02",
+    "new_customers": 340255,
+    "converted_60d": 24526,
+    "conversion_rate": 7.21,
+    "avg_days_to_second": 16.6,
+    "avg_second_order_profit": 197.1
+  },
+  "impact": {
+    "rate_lift_pp": -0.85,
+    "monthly_new_customers": 34026.0,
+    "extra_conversions_per_month": -289.2,
+    "profit_per_conversion": 197.1,
+    "monthly_value": -57004.62
+  }
+}
