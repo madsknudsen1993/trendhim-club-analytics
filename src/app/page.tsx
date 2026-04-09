@@ -18,6 +18,7 @@ import { GhostMembersTab } from "./_components/tabs/ghost-members";
 import { FurtherInvestigationsTab } from "./_components/tabs/further-investigations";
 import { OrderHistoryByCustomerTab } from "./_components/tabs/order-history-by-customer";
 import { DataSourceTab } from "./_components/tabs/data-source";
+import { ExecutiveSummaryTab } from "./_components/tabs/executive-summary";
 
 interface OrdersData {
   month: string;
@@ -182,6 +183,7 @@ export default function AnalyticsPage() {
   };
 
   const tabs = [
+    { value: "executive-summary", label: "Executive Summary" },
     { value: "conclusion", label: "Conclusion" },
     { value: "returning-orders", label: "H1: Returning Orders" },
     { value: "purchase-frequency", label: "H2: Purchase Freq" },
@@ -227,7 +229,7 @@ export default function AnalyticsPage() {
         </aside>
 
         <main className="space-y-6">
-          <Tabs defaultValue="conclusion" className="w-full">
+          <Tabs defaultValue="executive-summary" className="w-full">
             <TabsList className="w-full flex-wrap justify-start gap-1 h-auto p-1">
               {tabs.map((tab) => (
                 <TabsTrigger
@@ -239,6 +241,10 @@ export default function AnalyticsPage() {
                 </TabsTrigger>
               ))}
             </TabsList>
+
+            <TabsContent value="executive-summary" className="mt-6">
+              <ExecutiveSummaryTab />
+            </TabsContent>
 
             <TabsContent value="conclusion" className="mt-6">
               <ConclusionTab />

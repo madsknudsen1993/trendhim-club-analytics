@@ -26,6 +26,7 @@ import {
   DollarSign,
   Wallet,
   TrendingUp,
+  Calendar,
 } from "lucide-react";
 
 // ============================================================================
@@ -61,11 +62,16 @@ export const CORE_METRICS = {
     zeroBalance: { count: 37916, percentage: 65.4 },
   },
   aov: {
-    overall: 440,
-    club: 476,
-    nonClub: 442,
-    differenceDKK: 34,
-    differencePercent: 7.7,
+    // USING MEDIAN for robustness (mean is skewed by high-value outliers)
+    overall: 337,
+    club: 335,        // Median (mean was 473 - inflated by outliers)
+    nonClub: 338,     // Median (mean was 440)
+    differenceDKK: -3,
+    differencePercent: -0.9,
+    // For reference - mean values (skewed by outliers):
+    meanClub: 473,
+    meanNonClub: 440,
+    meanDifference: 33,
   },
   revenue: {
     total: 288060000,
@@ -81,27 +87,63 @@ export const CORE_METRICS = {
     engagementRate: 34.6,
   },
   profit: {
-    ordersWithProfitData: 1565116,
-    avgProfitPerOrder: 220,
-    totalProfit: 343810000,
-    clubAvgProfit: 224,
-    nonClubAvgProfit: 223,
-    differenceDKK: 1,
+    ordersWithProfitData: 651663,  // Orders in analysis period matched to Power BI
+    avgProfitPerOrder: 170,        // Overall median
+    totalProfit: 143048892,        // Total profit in analysis period
+    // USING MEDIAN for robustness (mean is skewed by high-value outliers)
+    clubAvgProfit: 158,            // Median (mean was 224 - inflated by outliers)
+    nonClubAvgProfit: 173,         // Median (mean was 219)
+    differenceDKK: -15,            // Club is LOWER than Non-Club for typical order
+    // For reference - mean values (skewed by outliers):
+    meanClub: 224,
+    meanNonClub: 219,
+    meanDifference: 5,
+    // Why median is more accurate:
+    // - Club has more high-profit outliers (1.43% vs 0.95% orders > 1000 DKK)
+    // - Mean is pulled up by these outliers
+    // - Median represents the TYPICAL order
   },
   costs: {
-    cashbackRedeemed: 3605323,  // Total cashback amount from cashback file (SUM WHERE amount > 0)
-    cashbackOrderCount: 26587,  // Records with cashback > 0 from cashback file
-    avgCashbackPerOrder: 86,    // Average per record from cashback file
-    shippingSubsidy: 838770,
-    shippingSubsidyOrderCount: 27959,
+    // =====================================================================
+    // CRITICAL FINDING: BOTH costs are ALREADY reflected in profit figures!
+    // =====================================================================
+
+    // CASHBACK: Already in profit (confirmed via analysis)
+    // - Orders WITH cashback: 192.24 DKK avg profit
+    // - Orders WITHOUT cashback: 250.84 DKK avg profit
+    // - Difference at same AOV: ~17 DKK (close to 15 DKK cashback amount)
+    // - Conclusion: Cashback reduces revenue → reduces profit → already counted
+    cashbackRedeemed: 3605323,  // For reference only - NOT a separate cost
+    cashbackOrderCount: 26587,
+    avgCashbackPerOrder: 86,
+    cashbackAlreadyInProfit: true,
+
+    // SHIPPING: ALSO already in profit (confirmed via analysis)
+    // - Club orders between Club and Normal thresholds get free shipping (Trendhim pays)
+    // - Conclusion: Free shipping = no shipping revenue → lower profit → already counted
+    shippingSubsidy: 815070,           // For reference only - NOT a separate cost
+    shippingSubsidyOrderCount: 27169,  // Club orders with FREE_CLUB_SUBSIDY (Apr 2025 - Jan 2026)
     avgShippingSubsidy: 30,
-    totalProgramCosts: 4444093,  // 3,605,323 + 838,770
+    shippingAlreadyInProfit: true,     // Shipping is also in profit!
+
+    // TOTAL INCREMENTAL COSTS = ZERO (both already in profit comparison)
+    totalProgramCosts: 0,  // CORRECTED: No separate costs to subtract
   },
   value: {
-    incrementalProfit: 102835,   // From PDF Final Conclusion
-    netValue: -4341258,          // 102,835 - 4,444,093
-    monthlyNetLoss: 434126,      // 4,341,258 / 10 months
-    roi: -97.7,                  // (netValue / totalProgramCosts) × 100
+    // USING MEDIAN profit difference: Club 158 DKK vs Non-Club 173 DKK = -15 DKK
+    // The typical (median) Club order generates LESS profit than typical Non-Club order
+    // This is because:
+    // - Cashback redemption reduces revenue → lower profit
+    // - Free shipping for lower thresholds → lower shipping revenue → lower profit
+    // - Mean was inflated by outliers (Club has more high-profit orders > 1000 DKK)
+    incrementalProfit: -1129080,  // -15 × 75,272 = -1,129,080 DKK (median-based)
+    netValue: -1129080,           // NEGATIVE: typical Club orders less profitable
+    monthlyNetLoss: 112908,       // 1,129,080 / 10 months
+    roi: null,                    // N/A (costs already in profit figures)
+    isProfitable: false,          // Cross-sectional median shows deficit
+    // However, longitudinal analysis shows different story:
+    // - Best customers: +17.35 DKK/mo incremental value
+    // - Volume increase (+24.8% frequency) may offset lower per-order profit
   },
   frequency: {
     club: 1.30,
@@ -156,7 +198,213 @@ export const CORE_METRICS = {
 
     // Key insight
     insight: "Volume wins: +24.8% more orders outweighs -8.6% lower profit per order",
+
+    // Broader sample (1+ orders before, 60d & 2+ orders after)
+    // Includes one-time buyers who were activated by Club
+    broaderSample: {
+      sampleSize: 9604,
+      criteria: "1+ orders BEFORE, 60+ days & 2+ orders AFTER",
+
+      // Breakdown
+      multiOrderBefore: 5860,   // 61% - already repeat customers
+      singleOrderBefore: 3744,  // 39% - one-time buyers activated
+
+      // Combined weighted metrics
+      before: {
+        frequency: 0.652,
+        avgOrderValue: 462.65,
+        profitPerOrder: 228.47,
+        monthlyProfit: 149.00,
+      },
+      after: {
+        frequency: 0.689,
+        avgOrderValue: 425.35,
+        profitPerOrder: 205.31,
+        monthlyProfit: 141.38,
+      },
+      changes: {
+        frequencyChange: 5.6,
+        aovChange: -8.1,
+        profitPerOrderChange: -10.1,
+        monthlyProfitChange: -5.1,
+        incrementalMonthlyValue: -7.62,
+      },
+      insight: "Combined: moderate +5.6% frequency lift offset by -10.1% profit/order drop = -7.62 DKK/mo net",
+    },
   },
+  // Monthly breakdown - April 2025 to February 2026
+  // AOV/Profit: Using MEDIAN (consistent with CORE_METRICS, robust against outliers)
+  // Shipping: Based on order value vs country thresholds (corrected from SHIPPING_GROSS_AMOUNT)
+  // - FREE: Order value >= Club threshold (customer gets free shipping)
+  // - PAID: Order value < Club threshold (customer pays for shipping)
+  // - PAID_W_CB: totalPrice = 0 (entire order paid with cashback)
+  monthlyBreakdown: [
+    {
+      month: "2025-04",
+      totalClubOrders: 3186,
+      cashbackOrderCount: 1147,
+      totalCashbackDKK: 163437,
+      avgCashbackDKK: 141,
+      aovAllClub: 320,
+      aovWithCB: 231,
+      aovWithoutCB: 373,
+      avgProfitAllClub: 147,
+      avgProfitCBOrders: 82,
+      shippingFree: 2579,
+      shippingPaid: 544,
+      shippingPaidWithCB: 70,
+    },
+    {
+      month: "2025-05",
+      totalClubOrders: 5318,
+      cashbackOrderCount: 2270,
+      totalCashbackDKK: 271325,
+      avgCashbackDKK: 119,
+      aovAllClub: 335,
+      aovWithCB: 266,
+      aovWithoutCB: 381,
+      avgProfitAllClub: 148,
+      avgProfitCBOrders: 94,
+      shippingFree: 4412,
+      shippingPaid: 846,
+      shippingPaidWithCB: 62,
+    },
+    {
+      month: "2025-06",
+      totalClubOrders: 5445,
+      cashbackOrderCount: 2177,
+      totalCashbackDKK: 225532,
+      avgCashbackDKK: 103,
+      aovAllClub: 320,
+      aovWithCB: 263,
+      aovWithoutCB: 360,
+      avgProfitAllClub: 146,
+      avgProfitCBOrders: 98,
+      shippingFree: 4438,
+      shippingPaid: 936,
+      shippingPaidWithCB: 70,
+    },
+    {
+      month: "2025-07",
+      totalClubOrders: 4717,
+      cashbackOrderCount: 1850,
+      totalCashbackDKK: 183018,
+      avgCashbackDKK: 99,
+      aovAllClub: 336,
+      aovWithCB: 261,
+      aovWithoutCB: 387,
+      avgProfitAllClub: 164,
+      avgProfitCBOrders: 114,
+      shippingFree: 3918,
+      shippingPaid: 767,
+      shippingPaidWithCB: 34,
+    },
+    {
+      month: "2025-08",
+      totalClubOrders: 6244,
+      cashbackOrderCount: 2195,
+      totalCashbackDKK: 213505,
+      avgCashbackDKK: 97,
+      aovAllClub: 346,
+      aovWithCB: 263,
+      aovWithoutCB: 395,
+      avgProfitAllClub: 166,
+      avgProfitCBOrders: 111,
+      shippingFree: 5276,
+      shippingPaid: 923,
+      shippingPaidWithCB: 50,
+    },
+    {
+      month: "2025-09",
+      totalClubOrders: 6098,
+      cashbackOrderCount: 2280,
+      totalCashbackDKK: 205694,
+      avgCashbackDKK: 90,
+      aovAllClub: 335,
+      aovWithCB: 265,
+      aovWithoutCB: 387,
+      avgProfitAllClub: 161,
+      avgProfitCBOrders: 111,
+      shippingFree: 5077,
+      shippingPaid: 983,
+      shippingPaidWithCB: 34,
+    },
+    {
+      month: "2025-10",
+      totalClubOrders: 6099,
+      cashbackOrderCount: 2343,
+      totalCashbackDKK: 219859,
+      avgCashbackDKK: 93,
+      aovAllClub: 336,
+      aovWithCB: 250,
+      aovWithoutCB: 390,
+      avgProfitAllClub: 165,
+      avgProfitCBOrders: 107,
+      shippingFree: 5004,
+      shippingPaid: 1009,
+      shippingPaidWithCB: 78,
+    },
+    {
+      month: "2025-11",
+      totalClubOrders: 12870,
+      cashbackOrderCount: 4783,
+      totalCashbackDKK: 440665,
+      avgCashbackDKK: 91,
+      aovAllClub: 327,
+      aovWithCB: 265,
+      aovWithoutCB: 365,
+      avgProfitAllClub: 144,
+      avgProfitCBOrders: 96,
+      shippingFree: 10536,
+      shippingPaid: 2238,
+      shippingPaidWithCB: 116,
+    },
+    {
+      month: "2025-12",
+      totalClubOrders: 13635,
+      cashbackOrderCount: 4092,
+      totalCashbackDKK: 364805,
+      avgCashbackDKK: 89,
+      aovAllClub: 333,
+      aovWithCB: 258,
+      aovWithoutCB: 365,
+      avgProfitAllClub: 160,
+      avgProfitCBOrders: 106,
+      shippingFree: 11563,
+      shippingPaid: 1940,
+      shippingPaidWithCB: 113,
+    },
+    {
+      month: "2026-01",
+      totalClubOrders: 7814,
+      cashbackOrderCount: 3362,
+      totalCashbackDKK: 317832,
+      avgCashbackDKK: 94,
+      aovAllClub: 329,
+      aovWithCB: 266,
+      aovWithoutCB: 373,
+      avgProfitAllClub: 157,
+      avgProfitCBOrders: 111,
+      shippingFree: 6265,
+      shippingPaid: 1487,
+      shippingPaidWithCB: 73,
+    },
+    {
+      month: "2026-02",
+      totalClubOrders: 2821,
+      cashbackOrderCount: 1190,
+      totalCashbackDKK: 101311,
+      avgCashbackDKK: 85,
+      aovAllClub: 301,
+      aovWithCB: 239,
+      aovWithoutCB: 347,
+      avgProfitAllClub: 139,
+      avgProfitCBOrders: 95,
+      shippingFree: 2137,
+      shippingPaid: 637,
+      shippingPaidWithCB: 32,
+    },
+  ],
 };
 
 // FX Rates from PDF
@@ -256,8 +504,8 @@ export function DataSourceTab() {
               </p>
               <ul className="mt-2 text-sm text-green-600 dark:text-green-500 space-y-1">
                 <li>• Club Orders: <strong>{formatNumber(CORE_METRICS.orders.club)}</strong> ({CORE_METRICS.orders.clubPercentage}%)</li>
-                <li>• Club Avg Profit: <strong>{CORE_METRICS.profit.clubAvgProfit} DKK</strong> | Non-Club: <strong>{CORE_METRICS.profit.nonClubAvgProfit} DKK</strong> | Difference: <strong>+{CORE_METRICS.profit.differenceDKK} DKK</strong></li>
-                <li>• Club AOV: <strong>{CORE_METRICS.aov.club} DKK</strong> | Non-Club: <strong>{CORE_METRICS.aov.nonClub} DKK</strong></li>
+                <li>• Club Avg Profit (median): <strong>{CORE_METRICS.profit.clubAvgProfit} DKK</strong> | Non-Club: <strong>{CORE_METRICS.profit.nonClubAvgProfit} DKK</strong> | Difference: <strong>{CORE_METRICS.profit.differenceDKK} DKK</strong></li>
+                <li>• Club AOV (median): <strong>{CORE_METRICS.aov.club} DKK</strong> | Non-Club: <strong>{CORE_METRICS.aov.nonClub} DKK</strong></li>
               </ul>
             </div>
           </div>
@@ -462,11 +710,11 @@ export function DataSourceTab() {
                 <TableCell className="text-muted-foreground text-sm">AVG(revenue_dkk) WHERE customerGroup.key != 'club'</TableCell>
                 <TableCell className="text-sm text-muted-foreground">orders_with_customerid.parquet</TableCell>
               </TableRow>
-              <TableRow className="bg-green-50/50 dark:bg-green-950/20">
-                <TableCell className="font-medium text-green-700 dark:text-green-400">AOV Difference (Club vs Non-Club)</TableCell>
-                <TableCell className="text-right font-bold text-green-600">+{CORE_METRICS.aov.differenceDKK} DKK (+{CORE_METRICS.aov.differencePercent}%)</TableCell>
-                <TableCell className="text-green-600 text-sm">Club AOV - Non-Club AOV</TableCell>
-                <TableCell className="text-sm text-green-600">Calculated</TableCell>
+              <TableRow className="bg-yellow-50/50 dark:bg-yellow-950/20">
+                <TableCell className="font-medium text-yellow-700 dark:text-yellow-400">AOV Difference (Club vs Non-Club)</TableCell>
+                <TableCell className="text-right font-bold text-yellow-600">{CORE_METRICS.aov.differenceDKK} DKK ({CORE_METRICS.aov.differencePercent}%)</TableCell>
+                <TableCell className="text-yellow-600 text-sm">Club AOV - Non-Club AOV (median)</TableCell>
+                <TableCell className="text-sm text-yellow-600">Calculated</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -800,14 +1048,161 @@ export function DataSourceTab() {
                 <TableCell className="text-muted-foreground text-sm">AVG(Total Profit) for Non-Club orders</TableCell>
                 <TableCell className="text-sm text-muted-foreground">orders + profit joined</TableCell>
               </TableRow>
-              <TableRow className="bg-green-50/50 dark:bg-green-950/20">
-                <TableCell className="font-medium text-green-700 dark:text-green-400">Profit Difference (Club vs Non-Club)</TableCell>
-                <TableCell className="text-right font-bold text-green-600">+{CORE_METRICS.profit.differenceDKK} DKK</TableCell>
-                <TableCell className="text-green-600 text-sm">Club Avg Profit - Non-Club Avg Profit</TableCell>
-                <TableCell className="text-sm text-green-600">Calculated</TableCell>
+              <TableRow className="bg-yellow-50/50 dark:bg-yellow-950/20">
+                <TableCell className="font-medium text-yellow-700 dark:text-yellow-400">Profit Difference (Club vs Non-Club)</TableCell>
+                <TableCell className="text-right font-bold text-yellow-600">{CORE_METRICS.profit.differenceDKK} DKK</TableCell>
+                <TableCell className="text-yellow-600 text-sm">Club Avg Profit - Non-Club Avg Profit (median)</TableCell>
+                <TableCell className="text-sm text-yellow-600">Calculated</TableCell>
               </TableRow>
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* Monthly Breakdown Table - Transposed (Months as Columns) */}
+      <Card className="border-2 border-blue-300 dark:border-blue-700">
+        <CardHeader className="pb-3 bg-blue-50 dark:bg-blue-950/30">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-500" />
+            <CardTitle className="text-base">Monthly Breakdown (April 2025 - February 2026)</CardTitle>
+          </div>
+          <CardDescription>
+            Club order metrics broken down by month - using MEDIAN for AOV/Profit (consistent with CORE_METRICS)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="sticky left-0 bg-muted/50 min-w-[180px]">Metric</TableHead>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableHead key={row.month} className="text-right min-w-[80px]">
+                      {row.month.replace("2025-", "").replace("2026-", "")}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Total Club Orders */}
+                <TableRow>
+                  <TableCell className="sticky left-0 bg-background font-medium">Total Club Orders</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {formatNumber(row.totalClubOrders)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Cashback Order Count */}
+                <TableRow className="bg-muted/20">
+                  <TableCell className="sticky left-0 bg-muted/20 font-medium">Cashback Order Count</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {formatNumber(row.cashbackOrderCount)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Total Cashback (DKK) */}
+                <TableRow>
+                  <TableCell className="sticky left-0 bg-background font-medium">Total Cashback (DKK)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {formatNumber(row.totalCashbackDKK)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Avg Cashback (DKK) */}
+                <TableRow className="bg-muted/20">
+                  <TableCell className="sticky left-0 bg-muted/20 font-medium">Avg Cashback (DKK)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {row.avgCashbackDKK}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* AOV - All Club (Median) */}
+                <TableRow className="bg-blue-50/50 dark:bg-blue-950/20">
+                  <TableCell className="sticky left-0 bg-blue-50/50 dark:bg-blue-950/20 font-medium text-blue-700 dark:text-blue-400">AOV - All Club (Median)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono font-bold">
+                      {row.aovAllClub}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* AOV - With CB (Median) */}
+                <TableRow className="bg-orange-50/50 dark:bg-orange-950/20">
+                  <TableCell className="sticky left-0 bg-orange-50/50 dark:bg-orange-950/20 font-medium text-orange-700 dark:text-orange-400">AOV - With CB (Median)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono text-orange-600">
+                      {row.aovWithCB}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* AOV - Without CB (Median) */}
+                <TableRow className="bg-green-50/50 dark:bg-green-950/20">
+                  <TableCell className="sticky left-0 bg-green-50/50 dark:bg-green-950/20 font-medium text-green-700 dark:text-green-400">AOV - Without CB (Median)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono text-green-600">
+                      {row.aovWithoutCB}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Avg Profit - All Club (Median) */}
+                <TableRow className="bg-blue-50/50 dark:bg-blue-950/20">
+                  <TableCell className="sticky left-0 bg-blue-50/50 dark:bg-blue-950/20 font-medium text-blue-700 dark:text-blue-400">Avg Profit - All Club (Median)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono font-bold">
+                      {row.avgProfitAllClub}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Avg Profit - CB Orders (Median) */}
+                <TableRow className="bg-orange-50/50 dark:bg-orange-950/20">
+                  <TableCell className="sticky left-0 bg-orange-50/50 dark:bg-orange-950/20 font-medium text-orange-700 dark:text-orange-400">Avg Profit - CB Orders (Median)</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono text-orange-600">
+                      {row.avgProfitCBOrders}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Shipping: PAID */}
+                <TableRow>
+                  <TableCell className="sticky left-0 bg-background font-medium">Shipping: PAID</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {formatNumber(row.shippingPaid)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Shipping: PAID W CASHBACK (totalPrice = 0) */}
+                <TableRow className="bg-muted/20">
+                  <TableCell className="sticky left-0 bg-muted/20 font-medium">Shipping: PAID W CB</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono">
+                      {formatNumber(row.shippingPaidWithCB)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Shipping: FREE */}
+                <TableRow className="bg-green-50/50 dark:bg-green-950/20">
+                  <TableCell className="sticky left-0 bg-green-50/50 dark:bg-green-950/20 font-medium text-green-700 dark:text-green-400">Shipping: FREE</TableCell>
+                  {CORE_METRICS.monthlyBreakdown.map((row) => (
+                    <TableCell key={row.month} className="text-right font-mono text-green-600">
+                      {formatNumber(row.shippingFree)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-700 dark:text-blue-400">
+              <strong>Legend:</strong> CB = Cashback | AOV = Average Order Value (median) | Profit = Avg Profit per Order (median)
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
+              <strong>Shipping:</strong> FREE = order value above Club threshold | PAID = below threshold | PAID W CB = entire order paid with cashback (totalPrice=0)
+            </p>
+          </div>
         </CardContent>
       </Card>
 

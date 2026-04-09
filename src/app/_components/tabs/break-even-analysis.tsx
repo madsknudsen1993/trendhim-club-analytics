@@ -30,17 +30,18 @@ import {
 } from "@/components/ui/collapsible";
 import { CORE_METRICS } from "./data-source";
 
-interface BreakEvenData {
-  totalDeficit: number;
-  monthlyNetLoss: number;
-  extraProfitPerOrder: number;
+interface ProgramData {
+  netValue: number;             // Negative with median (typical order less profitable)
+  monthlyNetLoss: number;       // Monthly loss (positive number representing loss)
+  extraProfitPerOrder: number;  // -15 DKK with median
   currentClubFrequency: number;
   nonClubFrequency: number;
   clubOrders: number;
   clubCustomers: number;
-  totalProgramCosts: number;
+  totalProgramCosts: number;    // = 0 (both costs in profit)
   incrementalProfit: number;
   analysisMonths: number;
+  isProfitable: boolean;
 }
 
 function formatNumber(num: number): string {
@@ -59,17 +60,21 @@ export function BreakEvenAnalysisTab() {
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
   // Values from CORE_METRICS (Single Source of Truth in data-source.tsx)
-  const data: BreakEvenData = {
-    totalDeficit: Math.abs(CORE_METRICS.value.netValue),
-    monthlyNetLoss: CORE_METRICS.value.monthlyNetLoss,
-    extraProfitPerOrder: CORE_METRICS.profit.differenceDKK,
+  // NOTE: Using MEDIAN values - typical Club order has LOWER profit than typical Non-Club
+  // Cross-sectional median: Club 158 DKK vs Non-Club 173 DKK = -15 DKK difference
+  // However, longitudinal analysis shows volume gains (+24.8% frequency) may offset this
+  const data: ProgramData = {
+    netValue: CORE_METRICS.value.netValue,                   // Negative with median
+    monthlyNetLoss: CORE_METRICS.value.monthlyNetLoss,       // Monthly loss
+    extraProfitPerOrder: CORE_METRICS.profit.differenceDKK,  // -15 DKK (median)
     currentClubFrequency: CORE_METRICS.frequency.club,
     nonClubFrequency: CORE_METRICS.frequency.nonClub,
     clubOrders: CORE_METRICS.orders.club,
     clubCustomers: CORE_METRICS.customers.totalClub,
-    totalProgramCosts: CORE_METRICS.costs.totalProgramCosts,
+    totalProgramCosts: CORE_METRICS.costs.totalProgramCosts, // = 0 (in profit)
     incrementalProfit: CORE_METRICS.value.incrementalProfit,
     analysisMonths: CORE_METRICS.analysisPeriod.months,
+    isProfitable: CORE_METRICS.value.isProfitable ?? false,
   };
 
   useEffect(() => {
@@ -92,316 +97,225 @@ export function BreakEvenAnalysisTab() {
     );
   }
 
-  // Calculate break-even scenarios
-  // Option 1: Increase Purchase Frequency
-  const costPerOrder = data.totalProgramCosts / data.clubOrders; // Cost per club order
-  const requiredExtraProfit = costPerOrder; // Extra profit needed per order to break even
-  const currentExtraProfit = data.extraProfitPerOrder;
-  const profitGapPerOrder = requiredExtraProfit - currentExtraProfit;
+  // Cross-sectional MEDIAN shows deficit - typical Club order less profitable
+  // However, longitudinal data shows different story (volume gains)
+  const deficitPerOrder = Math.abs(data.extraProfitPerOrder); // 15 DKK
+  const ordersPerMember = data.clubOrders / data.clubCustomers; // ~1.3 orders
+  const deficitPerMember = deficitPerOrder * ordersPerMember; // ~19.5 DKK per member
+  const totalDeficit = Math.abs(data.netValue); // ~1.13M DKK
 
-  // Orders needed at current extra profit to cover costs
-  const ordersNeededForBreakEven = data.totalProgramCosts / data.extraProfitPerOrder;
-  const additionalOrdersNeeded = ordersNeededForBreakEven - data.clubOrders;
-  const frequencyMultiplier = ordersNeededForBreakEven / data.clubOrders;
-  const requiredFrequency = data.currentClubFrequency * frequencyMultiplier;
+  // Break-even scenarios: what would make the program profitable?
+  // Option 1: Higher AOV could offset the deficit
+  const aovLiftNeeded = deficitPerOrder; // Need +15 DKK more profit to break even
 
-  // Option 2: Enroll More Members
-  // At current behavior, how many total members needed?
-  const profitPerCustomer = data.incrementalProfit / data.clubCustomers;
-  const costPerCustomer = data.totalProgramCosts / data.clubCustomers;
-  const netCostPerCustomer = costPerCustomer - profitPerCustomer;
-  const membersNeededBreakEven = data.totalProgramCosts / profitPerCustomer;
-  const additionalMembersNeeded = membersNeededBreakEven - data.clubCustomers;
-
-  // Trajectory data for chart
-  const trajectoryData = [
-    { month: "Apr 25", actual: 1.30, required: requiredFrequency },
-    { month: "May 25", actual: 1.30, required: requiredFrequency },
-    { month: "Jun 25", actual: 1.30, required: requiredFrequency },
-    { month: "Jul 25", actual: 1.30, required: requiredFrequency },
-    { month: "Aug 25", actual: 1.31, required: requiredFrequency },
-    { month: "Sep 25", actual: 1.30, required: requiredFrequency },
-    { month: "Oct 25", actual: 1.30, required: requiredFrequency },
-    { month: "Nov 25", actual: 1.31, required: requiredFrequency },
-    { month: "Dec 25", actual: 1.31, required: requiredFrequency },
-    { month: "Jan 26", actual: 1.30, required: requiredFrequency },
-  ];
+  // Option 2: Frequency gains (from longitudinal analysis)
+  // Longitudinal shows +24.8% frequency lift → more orders → may offset lower profit/order
+  const frequencyLift = CORE_METRICS.orderHistory.changes.frequencyChange; // 24.8%
+  const longitudinalIncrementalValue = CORE_METRICS.orderHistory.changes.incrementalMonthlyValue; // +17.35 DKK/mo
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card className="border-l-4 border-l-[#06402b]">
+      {/* Header - Cross-sectional Median shows deficit */}
+      <Card className="border-l-4 border-l-yellow-500">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-[#06402b]" />
-            <CardTitle className="text-xl">Break-Even Analysis</CardTitle>
+            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            <CardTitle className="text-xl">Break-Even Analysis (Median-Based)</CardTitle>
           </div>
           <CardDescription className="text-base mt-2">
-            What would it take for the Trendhim Club to become profitable?
+            Cross-sectional median shows per-order deficit, but longitudinal analysis tells a different story
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This analysis calculates the scenarios under which the Club program would generate
-            enough incremental value to cover its costs (cashback + shipping subsidies).
+            Using MEDIAN profit (more robust than mean), the typical Club order generates {data.extraProfitPerOrder} DKK
+            less profit than the typical Non-Club order. However, the longitudinal analysis shows Club members
+            order +{frequencyLift}% more frequently, which may offset the per-order deficit.
           </p>
         </CardContent>
       </Card>
 
-      {/* Current Situation */}
-      <Card className="border-red-500/50 bg-red-50/50 dark:bg-red-950/20">
+      {/* Cross-Sectional View - Shows Deficit */}
+      <Card className="border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-950/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <CardTitle className="text-red-700 dark:text-red-400">Current Situation</CardTitle>
+            <Target className="h-5 w-5 text-yellow-500" />
+            <CardTitle className="text-yellow-700 dark:text-yellow-400">Cross-Sectional View (Median)</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-red-200 dark:border-red-900">
-              <p className="text-sm text-muted-foreground">Total Deficit</p>
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-yellow-200 dark:border-yellow-900">
+              <p className="text-sm text-muted-foreground">Net Value</p>
               <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(data.totalDeficit)}
+                {formatCurrency(data.netValue)}
               </p>
-              <p className="text-xs text-muted-foreground">Costs - Incremental Profit</p>
+              <p className="text-xs text-muted-foreground">Typical order deficit</p>
             </div>
-            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-red-200 dark:border-red-900">
-              <p className="text-sm text-muted-foreground">Monthly Net Loss</p>
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-yellow-200 dark:border-yellow-900">
+              <p className="text-sm text-muted-foreground">Monthly Deficit</p>
               <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(data.monthlyNetLoss)}
+                -{formatCurrency(data.monthlyNetLoss)}
               </p>
               <p className="text-xs text-muted-foreground">Over {data.analysisMonths} months</p>
             </div>
-            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-green-200 dark:border-green-900">
-              <p className="text-sm text-muted-foreground">Extra Profit/Order</p>
-              <p className="text-2xl font-bold text-green-600">
-                +{data.extraProfitPerOrder.toFixed(2)} DKK
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-yellow-200 dark:border-yellow-900">
+              <p className="text-sm text-muted-foreground">Profit/Order (Median)</p>
+              <p className="text-2xl font-bold text-red-600">
+                {data.extraProfitPerOrder} DKK
               </p>
               <p className="text-xs text-muted-foreground">Club vs Non-Club</p>
             </div>
             <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border">
-              <p className="text-sm text-muted-foreground">Current Club Frequency</p>
+              <p className="text-sm text-muted-foreground">Deficit/Member</p>
               <p className="text-2xl font-bold">
-                {data.currentClubFrequency.toFixed(2)} orders
+                ~{deficitPerMember.toFixed(1)} DKK
               </p>
-              <p className="text-xs text-muted-foreground">per customer</p>
+              <p className="text-xs text-muted-foreground">per 10-month period</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Option 1: Increase Purchase Frequency */}
+      {/* Longitudinal View - Shows Different Story */}
+      <Card className="border-green-500/50 bg-green-50/50 dark:bg-green-950/20">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-500" />
+            <CardTitle className="text-green-700 dark:text-green-400">
+              Longitudinal View (Same Customers Before/After)
+            </CardTitle>
+          </div>
+          <CardDescription>
+            Tracking the same {formatNumber(CORE_METRICS.orderHistory.robustSampleSize)} customers before and after joining Club
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-green-200 dark:border-green-900">
+              <p className="text-sm text-green-700 dark:text-green-400">Frequency Change</p>
+              <p className="text-3xl font-bold text-green-600">
+                +{frequencyLift}%
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                More orders after joining
+              </p>
+            </div>
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-red-200 dark:border-red-900">
+              <p className="text-sm text-red-700 dark:text-red-400">Profit/Order Change</p>
+              <p className="text-3xl font-bold text-red-600">
+                {CORE_METRICS.orderHistory.changes.profitPerOrderChange}%
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                Lower profit per order
+              </p>
+            </div>
+            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-green-200 dark:border-green-900">
+              <p className="text-sm text-green-700 dark:text-green-400">Net Monthly Value</p>
+              <p className="text-3xl font-bold text-green-600">
+                +{longitudinalIncrementalValue} DKK
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                Per member per month
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Calculator className="h-4 w-4 text-muted-foreground" />
+              <p className="font-medium text-sm">Why Longitudinal Shows Profit</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>• Frequency before: <strong>{CORE_METRICS.orderHistory.before.frequency.toFixed(3)} orders/mo</strong></p>
+              <p>• Frequency after: <strong>{CORE_METRICS.orderHistory.after.frequency.toFixed(3)} orders/mo</strong> (+{frequencyLift}%)</p>
+              <p>• Monthly profit before: <strong>{CORE_METRICS.orderHistory.before.monthlyProfit.toFixed(2)} DKK</strong></p>
+              <p>• Monthly profit after: <strong>{CORE_METRICS.orderHistory.after.monthlyProfit.toFixed(2)} DKK</strong></p>
+              <p className="font-medium text-green-600">• Volume gains offset lower profit per order</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reconciliation */}
       <Card className="border-blue-500/50">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-500" />
+            <Target className="h-5 w-5 text-blue-500" />
             <CardTitle className="text-blue-700 dark:text-blue-400">
-              Option 1: Increase Purchase Frequency
+              Reconciling the Two Views
             </CardTitle>
           </div>
           <CardDescription>
-            If we keep the same number of members, how much more must each customer purchase?
+            Why cross-sectional and longitudinal analyses differ
           </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
-              <p className="text-sm text-blue-700 dark:text-blue-400">Required Frequency</p>
-              <p className="text-3xl font-bold text-blue-600">
-                {requiredFrequency.toFixed(2)} orders
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                per customer (currently {data.currentClubFrequency})
-              </p>
-            </div>
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
-              <p className="text-sm text-blue-700 dark:text-blue-400">Increase Needed</p>
-              <p className="text-3xl font-bold text-blue-600">
-                +{((frequencyMultiplier - 1) * 100).toFixed(0)}%
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                {frequencyMultiplier.toFixed(1)}x current frequency
-              </p>
-            </div>
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
-              <p className="text-sm text-blue-700 dark:text-blue-400">Additional Orders</p>
-              <p className="text-3xl font-bold text-blue-600">
-                +{formatNumber(additionalOrdersNeeded)}
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                beyond current {formatNumber(data.clubOrders)}
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Calculator className="h-4 w-4 text-muted-foreground" />
-              <p className="font-medium text-sm">Calculation Logic</p>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>• Extra profit per order: <strong>{data.extraProfitPerOrder.toFixed(2)} DKK</strong></p>
-              <p>• Total costs to cover: <strong>{formatCurrency(data.totalProgramCosts)}</strong></p>
-              <p>• Orders needed: {formatCurrency(data.totalProgramCosts)} ÷ {data.extraProfitPerOrder.toFixed(2)} DKK = <strong>{formatNumber(ordersNeededForBreakEven)} orders</strong></p>
-              <p>• With {formatNumber(data.clubCustomers)} members: <strong>{requiredFrequency.toFixed(2)} orders each</strong></p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Option 2: Enroll More Members */}
-      <Card className="border-purple-500/50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-purple-500" />
-            <CardTitle className="text-purple-700 dark:text-purple-400">
-              Option 2: Enroll More Members
-            </CardTitle>
-          </div>
-          <CardDescription>
-            If purchase frequency stays the same, how many more members do we need?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-900">
-              <p className="text-sm text-purple-700 dark:text-purple-400">Required Members</p>
-              <p className="text-3xl font-bold text-purple-600">
-                {formatNumber(membersNeededBreakEven)}
-              </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">
-                total Club members
-              </p>
-            </div>
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-900">
-              <p className="text-sm text-purple-700 dark:text-purple-400">Additional Members</p>
-              <p className="text-3xl font-bold text-purple-600">
-                +{formatNumber(additionalMembersNeeded)}
-              </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">
-                beyond current {formatNumber(data.clubCustomers)}
-              </p>
-            </div>
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-900">
-              <p className="text-sm text-purple-700 dark:text-purple-400">Multiplier</p>
-              <p className="text-3xl font-bold text-purple-600">
-                {(membersNeededBreakEven / data.clubCustomers).toFixed(1)}x
-              </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">
-                current member base
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Calculator className="h-4 w-4 text-muted-foreground" />
-              <p className="font-medium text-sm">Calculation Logic</p>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>• Incremental profit per customer: <strong>{formatCurrency(profitPerCustomer)}</strong></p>
-              <p>• Total costs to cover: <strong>{formatCurrency(data.totalProgramCosts)}</strong></p>
-              <p>• Members needed: {formatCurrency(data.totalProgramCosts)} ÷ {formatCurrency(profitPerCustomer)} = <strong>{formatNumber(membersNeededBreakEven)} members</strong></p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reality Check */}
-      <Card className="border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-950/20">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <CardTitle className="text-yellow-700 dark:text-yellow-400">Reality Check</CardTitle>
-          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-yellow-200 dark:border-yellow-900">
-              <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
-                Option 1 Challenge: Frequency
-              </h4>
-              <p className="text-sm text-muted-foreground mb-2">
-                Increasing purchase frequency from <strong>1.30</strong> to <strong>{requiredFrequency.toFixed(2)}</strong> orders
-                per customer represents a <strong>{((frequencyMultiplier - 1) * 100).toFixed(0)}% increase</strong>.
-              </p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                This is unrealistic for a fashion accessory retailer with typical repurchase cycles.
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900">
+              <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Cross-Sectional (Median)</p>
+              <p className="text-xl font-bold text-red-600">{data.extraProfitPerOrder} DKK/order</p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                Compares Club vs Non-Club at a point in time.
+                Shows typical Club order is less profitable.
               </p>
             </div>
-            <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-yellow-200 dark:border-yellow-900">
-              <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
-                Option 2 Challenge: Member Growth
-              </h4>
-              <p className="text-sm text-muted-foreground mb-2">
-                Growing from <strong>{formatNumber(data.clubCustomers)}</strong> to <strong>{formatNumber(membersNeededBreakEven)}</strong> members
-                requires a <strong>{((membersNeededBreakEven / data.clubCustomers - 1) * 100).toFixed(0)}x</strong> increase.
-              </p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                This assumes member acquisition cost is zero and all new members behave identically.
+            <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">Longitudinal (Same Customers)</p>
+              <p className="text-xl font-bold text-green-600">+{longitudinalIncrementalValue} DKK/mo</p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                Tracks same customers before/after joining.
+                Shows net positive from volume increase.
               </p>
             </div>
           </div>
-
-          <div className="p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900">
-            <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">The Core Problem</h4>
-            <p className="text-sm text-red-700 dark:text-red-400">
-              The <strong>extra profit per order (+{data.extraProfitPerOrder.toFixed(2)} DKK)</strong> is
-              too small relative to program costs. Even significant increases in frequency or membership
-              would struggle to overcome the fundamental economics.
+          <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-700 dark:text-blue-400">
+              <strong>Key Insight:</strong> Both analyses are correct. The typical Club order generates less profit,
+              but Club members order more frequently. The +{frequencyLift}% frequency increase more than offsets
+              the {CORE_METRICS.orderHistory.changes.profitPerOrderChange}% profit decline, resulting in +{CORE_METRICS.orderHistory.changes.monthlyProfitChange}% higher monthly profit.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Purchase Frequency Trajectory Chart */}
-      <Card>
+      {/* Key Insight */}
+      <Card className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-muted-foreground" />
-            <CardTitle>Purchase Frequency Trajectory</CardTitle>
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-blue-700 dark:text-blue-400">Key Insight</CardTitle>
           </div>
-          <CardDescription>
-            Actual Club frequency vs required frequency for break-even
-          </CardDescription>
         </CardHeader>
-        <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trajectoryData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis
-                domain={[1.0, Math.ceil(requiredFrequency * 1.1)]}
-                tick={{ fontSize: 12 }}
-                tickFormatter={(v) => v.toFixed(1)}
-              />
-              <Tooltip
-                formatter={(value, name) => [
-                  value !== undefined ? Number(value).toFixed(2) : '',
-                  name === "actual" ? "Actual Frequency" : "Required for Break-Even"
-                ]}
-              />
-              <Legend />
-              <ReferenceLine
-                y={requiredFrequency}
-                stroke="#ef4444"
-                strokeDasharray="5 5"
-                label={{ value: "Break-Even", fill: "#ef4444", fontSize: 12 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="actual"
-                name="Actual Frequency"
-                stroke="#06402b"
-                strokeWidth={3}
-                dot={{ fill: "#06402b", strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-blue-200 dark:border-blue-900">
+            <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2">
+              Volume Wins: {CORE_METRICS.orderHistory.insight}
+            </h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Using MEDIAN values, the typical Club order has {data.extraProfitPerOrder} DKK lower profit.
+              But Club members order +{frequencyLift}% more frequently, resulting in NET POSITIVE monthly profit.
+            </p>
+            <div className="text-sm space-y-1">
+              <p>• Median profit difference: <strong>{data.extraProfitPerOrder} DKK/order</strong></p>
+              <p>• Frequency increase: <strong>+{frequencyLift}%</strong></p>
+              <p>• Monthly profit change: <strong>+{CORE_METRICS.orderHistory.changes.monthlyProfitChange}%</strong></p>
+              <p>• Net incremental value: <strong>+{longitudinalIncrementalValue} DKK/member/month</strong></p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg border border-yellow-300">
+            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Important Caveat</h4>
+            <p className="text-sm text-yellow-700 dark:text-yellow-400">
+              The longitudinal analysis uses a robust sample of {formatNumber(CORE_METRICS.orderHistory.robustSampleSize)} highly engaged members.
+              The {formatNumber(CORE_METRICS.customers.totalClub - CORE_METRICS.orderHistory.robustSampleSize)} other members may show different behavior.
+              The broader sample including one-time-buyers shows {CORE_METRICS.orderHistory.broaderSample.changes.incrementalMonthlyValue} DKK/mo.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Alternative Paths */}
+      {/* Optimization Opportunities */}
       <Collapsible open={isMethodologyOpen} onOpenChange={setIsMethodologyOpen}>
         <Card>
           <CollapsibleTrigger asChild>
@@ -409,7 +323,7 @@ export function BreakEvenAnalysisTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-base">Alternative Paths to Profitability</CardTitle>
+                  <CardTitle className="text-base">Optimization Opportunities</CardTitle>
                 </div>
                 <Badge variant="outline">
                   {isMethodologyOpen ? "Click to collapse" : "Click to expand"}
@@ -421,39 +335,39 @@ export function BreakEvenAnalysisTab() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold mb-2">Reduce Cashback Rate</h4>
+                  <h4 className="font-semibold mb-2">Increase Per-Order Profit</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Lowering the cashback percentage would reduce costs while maintaining member benefits.
+                    Median shows {Math.abs(data.extraProfitPerOrder)} DKK deficit per order. Can we close this gap?
                   </p>
-                  <p className="text-sm">
-                    Current: ~3% cashback → Need: &lt;0.5% to break even
+                  <p className="text-sm text-yellow-600">
+                    Options: Higher AOV, reduced cashback %, tiered shipping
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold mb-2">Increase Free Shipping Threshold</h4>
+                  <h4 className="font-semibold mb-2">Maximize Frequency Lift</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Raising the Club free shipping threshold would reduce shipping subsidy costs.
+                    Frequency increase (+{frequencyLift}%) is what makes the program work.
                   </p>
-                  <p className="text-sm">
-                    Impact: ~{formatCurrency(data.totalProgramCosts * 0.24)} saved if aligned with non-Club
+                  <p className="text-sm text-green-600">
+                    More engagement → More orders → Offsets per-order deficit
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold mb-2">Add Membership Fee</h4>
+                  <h4 className="font-semibold mb-2">Target Best Customer Segments</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    A paid membership tier would create direct revenue.
+                    "Best customers" segment shows +17.35 DKK/mo incremental value.
                   </p>
-                  <p className="text-sm">
-                    Break-even fee: {formatCurrency(data.totalDeficit / data.clubCustomers)} per member
+                  <p className="text-sm text-green-600">
+                    Focus on repeat customers who respond most to Club
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold mb-2">Target Higher-Value Customers</h4>
+                  <h4 className="font-semibold mb-2">Consider Paid Membership</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Focus enrollment on customers with proven purchase history.
+                    A membership fee could offset the per-order deficit.
                   </p>
-                  <p className="text-sm">
-                    Higher AOV members generate more profit to offset costs
+                  <p className="text-sm text-green-600">
+                    ~{Math.abs(data.extraProfitPerOrder) * ordersPerMember} DKK/year fee would break even
                   </p>
                 </div>
               </div>

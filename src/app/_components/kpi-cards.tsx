@@ -30,11 +30,11 @@ export function KPICards() {
       color: "text-purple-600",
     },
     {
-      title: "Program ROI",
-      value: `${CORE_METRICS.value.roi}%`,
-      subtitle: "Not profitable",
+      title: "Profit/Order (Median)",
+      value: `${CORE_METRICS.profit.differenceDKK} DKK`,
+      subtitle: "Club vs Non-Club",
       icon: TrendingDown,
-      color: "text-red-600",
+      color: "text-yellow-600",
     },
   ];
 

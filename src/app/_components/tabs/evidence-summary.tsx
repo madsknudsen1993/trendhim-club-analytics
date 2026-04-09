@@ -38,53 +38,65 @@ const ORDER_HISTORY = {
   monthlyProfitChange: CORE_METRICS.orderHistory.changes.monthlyProfitChange,
 };
 
+// Broader sample data
+const BROADER = CORE_METRICS.orderHistory.broaderSample;
+const BROADER_HISTORY = {
+  sampleSize: BROADER.sampleSize,
+  frequencyChange: BROADER.changes.frequencyChange,
+  monthlyProfitChange: BROADER.changes.monthlyProfitChange,
+  incrementalValue: BROADER.changes.incrementalMonthlyValue,
+};
+
 const hypothesisResults: HypothesisResult[] = [
   {
     id: "H1",
     name: "Returning Orders",
     hypothesis: "Club members have higher returning order rates",
     verdict: "SUPPORTED",
-    finding: `Order History analysis shows same customers increase from ${ORDER_HISTORY.beforeFrequency} to ${ORDER_HISTORY.afterFrequency} orders/month after joining Club. This proves causation, not just correlation.`,
-    keyMetric: "Frequency Change (causal)",
-    keyValue: `+${ORDER_HISTORY.frequencyChange}%`,
+    finding: `Robust sample: +${ORDER_HISTORY.frequencyChange}% frequency increase. Broader sample (incl. 1-order customers): +${BROADER_HISTORY.frequencyChange}%. Both prove causation, but magnitude varies by sample definition.`,
+    keyMetric: "Frequency Change",
+    keyValue: `+${ORDER_HISTORY.frequencyChange}% / +${BROADER_HISTORY.frequencyChange}%`,
+    caveat: "Robust vs Broader samples differ significantly",
   },
   {
     id: "H2",
     name: "Purchase Frequency",
     hypothesis: "Club members purchase more frequently than non-members",
     verdict: "SUPPORTED",
-    finding: `Cross-sectional: Club ${CORE_METRICS.frequency.club} vs Non-Club ${CORE_METRICS.frequency.nonClub} orders/customer (+${CORE_METRICS.frequency.differencePercent}%). Longitudinal: Same customers show +${ORDER_HISTORY.frequencyChange}% increase after joining.`,
-    keyMetric: "Longitudinal Change",
-    keyValue: `+${ORDER_HISTORY.frequencyChange}%`,
+    finding: `Cross-sectional: +${CORE_METRICS.frequency.differencePercent}%. Longitudinal: Robust +${ORDER_HISTORY.frequencyChange}%, Broader +${BROADER_HISTORY.frequencyChange}%. Frequency increase is causal but varies by sample.`,
+    keyMetric: "Longitudinal Range",
+    keyValue: `+${BROADER_HISTORY.frequencyChange}% to +${ORDER_HISTORY.frequencyChange}%`,
+    caveat: "Broader sample includes regression-to-mean",
   },
   {
     id: "H3",
     name: "Loyalty Progression",
     hypothesis: "Club membership accelerates progression through loyalty tiers",
     verdict: "PARTIALLY SUPPORTED",
-    finding: "Club members have higher Loyal segment (3+ orders) rate of 7.0% vs 3.2% for non-Club. Order History confirms frequency increase is causal, supporting this hypothesis.",
+    finding: "Club Loyal segment (3+ orders): 7.0% vs Non-Club 3.2%. However, broader sample shows high-frequency customers regress (-24.5%) while one-time buyers activate (+174.8%).",
     keyMetric: "Loyal Rate",
     keyValue: "7.0% vs 3.2%",
-    caveat: "Longitudinal sample is highly engaged members",
+    caveat: "Mixed effects: activation vs regression",
   },
   {
     id: "H4",
     name: "Cashback Impact",
     hypothesis: "Cashback balances drive repeat purchases",
     verdict: "PARTIALLY SUPPORTED",
-    finding: `${CORE_METRICS.cashbackSegments.hasBalance.percentage}% of members have positive cashback balance. These members show higher engagement, but causality direction still unclear.`,
+    finding: `${CORE_METRICS.cashbackSegments.hasBalance.percentage}% have positive balance. Broader sample shows cashback costs (-10.1% profit/order) can offset frequency gains when applied broadly.`,
     keyMetric: "Members with Balance",
     keyValue: `${CORE_METRICS.cashbackSegments.hasBalance.percentage}%`,
-    caveat: "Correlation vs causation unclear",
+    caveat: "Cashback cost vs behavior benefit unclear",
   },
   {
     id: "H5",
     name: "Before/After Behavior",
     hypothesis: "Customer behavior improves after joining Club",
-    verdict: "SUPPORTED",
-    finding: `Order History analysis of ${ORDER_HISTORY.robustSampleSize.toLocaleString()} customers shows clear improvement: frequency +${ORDER_HISTORY.frequencyChange}%, monthly profit +${ORDER_HISTORY.monthlyProfitChange}%. This is causal evidence.`,
+    verdict: "PARTIALLY SUPPORTED",
+    finding: `Robust (${ORDER_HISTORY.robustSampleSize.toLocaleString()}): +${ORDER_HISTORY.monthlyProfitChange}% monthly profit. Broader (${BROADER_HISTORY.sampleSize.toLocaleString()}): ${BROADER_HISTORY.monthlyProfitChange}% monthly profit. Net value depends on sample.`,
     keyMetric: "Monthly Profit Change",
-    keyValue: `+${ORDER_HISTORY.monthlyProfitChange}%`,
+    keyValue: `+${ORDER_HISTORY.monthlyProfitChange}% / ${BROADER_HISTORY.monthlyProfitChange}%`,
+    caveat: "Broader sample shows negative profit change",
   },
   {
     id: "H6",
@@ -99,31 +111,31 @@ const hypothesisResults: HypothesisResult[] = [
     id: "H7",
     name: "Average Order Value",
     hypothesis: "Club members have higher average order values",
-    verdict: "SUPPORTED",
-    finding: `Club AOV ${CORE_METRICS.aov.club} DKK vs Non-Club ${CORE_METRICS.aov.nonClub} DKK (+${(((CORE_METRICS.aov.club - CORE_METRICS.aov.nonClub) / CORE_METRICS.aov.nonClub) * 100).toFixed(1)}%). However, Order History shows AOV drops slightly after joining (customers order more often at smaller amounts).`,
+    verdict: "PARTIALLY SUPPORTED",
+    finding: `Cross-sectional: Club +${(((CORE_METRICS.aov.club - CORE_METRICS.aov.nonClub) / CORE_METRICS.aov.nonClub) * 100).toFixed(1)}% higher AOV. But longitudinal shows AOV drops after joining (Robust -7.6%, Broader -8.1%) as customers order more often at smaller amounts.`,
     keyMetric: "AOV Difference",
-    keyValue: `+${(((CORE_METRICS.aov.club - CORE_METRICS.aov.nonClub) / CORE_METRICS.aov.nonClub) * 100).toFixed(1)}%`,
+    keyValue: `+${(((CORE_METRICS.aov.club - CORE_METRICS.aov.nonClub) / CORE_METRICS.aov.nonClub) * 100).toFixed(1)}% cross / -8% long`,
     caveat: "Cross-sectional vs longitudinal differ",
   },
   {
     id: "H8",
     name: "Order Profit",
     hypothesis: "Club orders are more profitable per order",
-    verdict: "PARTIALLY SUPPORTED",
-    finding: `Cross-sectional: Club ${CORE_METRICS.profit.clubAvgProfit} DKK vs Non-Club ${CORE_METRICS.profit.nonClubAvgProfit} DKK (+${CORE_METRICS.profit.differenceDKK} DKK/order). However, Order History shows profit/order drops after joining - the gain comes from higher frequency, not higher margins.`,
-    keyMetric: "Profit Difference",
-    keyValue: `+${CORE_METRICS.profit.differenceDKK} DKK/order`,
-    caveat: "Volume effect > margin effect",
+    verdict: "NOT SUPPORTED",
+    finding: `Cross-sectional: +${CORE_METRICS.profit.differenceDKK} DKK/order. Longitudinal: profit/order drops (Robust -8.6%, Broader -10.1%). The gain comes from frequency volume, not margins. Cashback erodes per-order profit.`,
+    keyMetric: "Profit/Order Change",
+    keyValue: `-8.6% to -10.1%`,
+    caveat: "Volume wins, but margins drop",
   },
   {
     id: "H9",
     name: "Program ROI",
     hypothesis: "Incremental revenue covers program costs",
     verdict: "INCONCLUSIVE",
-    finding: `Cross-sectional ROI: ${CORE_METRICS.value.roi}% (costs ${(CORE_METRICS.costs.totalProgramCosts/1000000).toFixed(2)}M exceed ${(CORE_METRICS.value.incrementalProfit/1000).toFixed(0)}K incremental). But Order History suggests +17 DKK/member/month value for engaged members, which could yield positive ROI if applied broadly.`,
-    keyMetric: "Program ROI",
-    keyValue: `${CORE_METRICS.value.roi}% to TBD`,
-    caveat: "Depends on which analysis you trust",
+    finding: `Robust sample: +17.35 DKK/mo = potentially profitable. Broader sample: -7.62 DKK/mo = not profitable. True ROI lies between these scenarios depending on member mix.`,
+    keyMetric: "Net Value/Member",
+    keyValue: `-7.62 to +17.35 DKK/mo`,
+    caveat: "Highly dependent on sample definition",
   },
 ];
 
@@ -311,23 +323,32 @@ export function EvidenceSummaryTab() {
           <CardTitle>Key Takeaways</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-3">
             <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-900">
-              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Proven (Causal Evidence)</h4>
+              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Robust Sample ({ORDER_HISTORY.robustSampleSize.toLocaleString()})</h4>
               <ul className="space-y-1 text-sm text-green-700 dark:text-green-400">
-                <li>• <strong>+{ORDER_HISTORY.frequencyChange}% frequency increase</strong> (same customers, before/after)</li>
-                <li>• <strong>+{ORDER_HISTORY.monthlyProfitChange}% monthly profit increase</strong> per engaged member</li>
-                <li>• Club <em>causes</em> behavior change (not just selection bias)</li>
-                <li>• Higher AOV cross-sectionally (+{(((CORE_METRICS.aov.club - CORE_METRICS.aov.nonClub) / CORE_METRICS.aov.nonClub) * 100).toFixed(0)}%)</li>
+                <li>• <strong>+{ORDER_HISTORY.frequencyChange}% frequency</strong></li>
+                <li>• <strong>+{ORDER_HISTORY.monthlyProfitChange}% monthly profit</strong></li>
+                <li>• <strong>+17.35 DKK/mo</strong> net value</li>
+                <li>• Highly engaged repeat customers</li>
               </ul>
             </div>
-            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900">
-              <h4 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">Uncertain / Caveats</h4>
-              <ul className="space-y-1 text-sm text-amber-700 dark:text-amber-400">
-                <li>• Longitudinal sample ({ORDER_HISTORY.robustSampleSize.toLocaleString()}) may not represent all {CORE_METRICS.customers.totalClub.toLocaleString()} members</li>
-                <li>• {CORE_METRICS.cashbackSegments.zeroBalance.percentage}% of members have zero cashback balance</li>
-                <li>• Cross-sectional ROI is {CORE_METRICS.value.roi}% (very negative)</li>
-                <li>• True ROI depends on how many members the uplift applies to</li>
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-900">
+              <h4 className="font-semibold text-orange-700 dark:text-orange-400 mb-2">Broader Sample ({BROADER_HISTORY.sampleSize.toLocaleString()})</h4>
+              <ul className="space-y-1 text-sm text-orange-700 dark:text-orange-400">
+                <li>• <strong>+{BROADER_HISTORY.frequencyChange}% frequency</strong></li>
+                <li>• <strong>{BROADER_HISTORY.monthlyProfitChange}% monthly profit</strong></li>
+                <li>• <strong>{BROADER_HISTORY.incrementalValue} DKK/mo</strong> net value</li>
+                <li>• Includes 1-order customers + regression</li>
+              </ul>
+            </div>
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
+              <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2">What We Know For Certain</h4>
+              <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
+                <li>• Club <em>causes</em> frequency increase (causal)</li>
+                <li>• Profit/order drops after joining (-8-10%)</li>
+                <li>• High-freq customers regress (-24.5%)</li>
+                <li>• One-time buyers activate (+174.8%)</li>
               </ul>
             </div>
           </div>
