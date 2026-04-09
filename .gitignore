@@ -41,3 +41,13 @@ next-env.d.ts
 
 # drizzle
 /drizzle
+
+# data files
+*.csv
+*.parquet
+*.xlsx
+*.xls
+PowerBi*/
+scripts/analysis_results/
+CONVERSATION_CONTEXT.md
+check_order.ts
