@@ -228,39 +228,47 @@ const MEDIUM_CUSTOMERS = {
 };
 
 // Segment 4: Fresh Customers (Period comparison - before/after Club launch)
+// Source: scripts/fresh_customer_analysis.py + scripts/fresh_customer_cashback_analysis.py
 const FRESH_CUSTOMERS = {
   // Sample info
-  conversionWindow: CORE_METRICS.freshCustomers.conversionWindow,
-  customerIdentifier: CORE_METRICS.freshCustomers.customerIdentifier,
+  conversionWindow: 60,
+  customerIdentifier: "UNIQUE_CUSTOMER_ID",
 
-  // Before period
-  beforeLabel: CORE_METRICS.freshCustomers.beforePeriod.label,
-  beforeNewCustomers: CORE_METRICS.freshCustomers.beforePeriod.newCustomers,
-  beforeConverted: CORE_METRICS.freshCustomers.beforePeriod.converted60d,
-  beforeConversionRate: CORE_METRICS.freshCustomers.beforePeriod.conversionRate,
-  beforeAvgDays: CORE_METRICS.freshCustomers.beforePeriod.avgDaysToSecond,
-  beforeMedianDays: CORE_METRICS.freshCustomers.beforePeriod.medianDaysToSecond,
-  beforeAvgProfit: CORE_METRICS.freshCustomers.beforePeriod.avgSecondOrderProfit,
+  // Before period (Jan 2023 - Mar 2025)
+  beforeLabel: "Jan 2023 - Mar 2025",
+  beforeNewCustomers: 782605,
+  beforeConverted: 63113,
+  beforeConversionRate: 8.06,
+  beforeAvgDays: 19.98,
+  beforeMedianDays: 14,
 
-  // After period
-  afterLabel: CORE_METRICS.freshCustomers.afterPeriod.label,
-  afterNewCustomers: CORE_METRICS.freshCustomers.afterPeriod.newCustomers,
-  afterConverted: CORE_METRICS.freshCustomers.afterPeriod.converted60d,
-  afterConversionRate: CORE_METRICS.freshCustomers.afterPeriod.conversionRate,
-  afterAvgDays: CORE_METRICS.freshCustomers.afterPeriod.avgDaysToSecond,
-  afterMedianDays: CORE_METRICS.freshCustomers.afterPeriod.medianDaysToSecond,
-  afterAvgProfit: CORE_METRICS.freshCustomers.afterPeriod.avgSecondOrderProfit,
+  // After period (Apr 2025 - Jan 2026)
+  afterLabel: "Apr 2025 - Jan 2026",
+  afterNewCustomers: 340259,
+  afterConverted: 24533,
+  afterConversionRate: 7.21,
+  afterAvgDays: 19.98,
+  afterMedianDays: 13,
 
-  // Impact
-  rateLiftPP: CORE_METRICS.freshCustomers.impact.rateLiftPP,
-  monthlyNewCustomers: CORE_METRICS.freshCustomers.impact.monthlyNewCustomers,
-  extraConversionsPerMonth: CORE_METRICS.freshCustomers.impact.extraConversionsPerMonth,
-  profitPerConversion: CORE_METRICS.freshCustomers.impact.profitPerConversion,
-  monthlyValue: CORE_METRICS.freshCustomers.impact.monthlyValue,
+  // Impact calculation
+  rateLiftPP: -0.85,
+  monthlyNewCustomers: 34026,
+  lostConversionsPerMonth: 289,
+  profitPerConversion: 197,
+  lostProfitPerMonth: 56933,
 
-  // Validation
-  avgDaysValidation: CORE_METRICS.freshCustomers.avgDaysValidation,
-  note: CORE_METRICS.freshCustomers.note,
+  // Cashback analysis for converters (from fresh_customer_cashback_analysis.py)
+  convertersWithCashback: 12,
+  converterCashbackRate: 0.05,
+  totalCashbackRedeemed: 762,
+  monthlyCashbackCost: 85,
+
+  // Total monthly cost
+  totalMonthlyCost: 57018,
+  costFromLostConversions: 56933,
+  costFromCashback: 85,
+  pctFromLostConversions: 99.85,
+  pctFromCashback: 0.15,
 };
 
 // Program constants
@@ -798,104 +806,149 @@ export function ExecutiveSummaryTab() {
             </div>
 
             {/* ============================================================ */}
-            {/* SEGMENT 4: Fresh Customers - Keep the original structure */}
+            {/* SEGMENT 4: Fresh Customers - Detailed P&L Breakdown */}
             {/* ============================================================ */}
-            <div className="border-2 border-blue-400 rounded-lg overflow-hidden flex flex-col">
-              {/* Header - Fixed height */}
-              <div className="bg-blue-500 text-white p-4 min-h-[80px]">
-                <div className="flex items-center gap-2">
-                  <Sprout className="h-5 w-5" />
+            <div className="border-2 border-red-400 rounded-lg overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="bg-red-500 text-white p-4 flex justify-between items-start">
+                <div>
                   <h3 className="font-bold text-lg">Fresh Customers</h3>
+                  <p className="text-red-100 text-sm">1st → 2nd order conversion</p>
                 </div>
-                <p className="text-blue-100 text-sm mt-1">1st → 2nd order conversion (period comparison)</p>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</p>
+                  <p className="text-red-100 text-xs">converted after Club</p>
+                </div>
               </div>
 
-              <div className="p-4 space-y-4 bg-blue-50/30 dark:bg-blue-950/10 flex-1 flex flex-col">
-                {/* ROW 1: Sample Definition */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[140px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-blue-500" />
-                    <span className="font-semibold text-sm">Sample Definition</span>
-                  </div>
-                  <p className="text-sm font-medium">ALL customers placing their first-ever order</p>
-                  <p className="text-xs text-muted-foreground">Success = 2nd order within {FRESH_CUSTOMERS.conversionWindow} days</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded">
-                      <span className="text-muted-foreground">Before Club</span>
-                      <p className="font-mono font-bold text-[10px]">{FRESH_CUSTOMERS.beforeLabel}</p>
-                      <p className="text-[10px] text-muted-foreground">{formatNumber(FRESH_CUSTOMERS.beforeNewCustomers)} new</p>
-                    </div>
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded">
-                      <span className="text-blue-700">After Club</span>
-                      <p className="font-mono font-bold text-blue-700 text-[10px]">{FRESH_CUSTOMERS.afterLabel}</p>
-                      <p className="text-[10px] text-blue-600">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)} new</p>
-                    </div>
-                  </div>
+              <div className="p-4 space-y-4 bg-white dark:bg-zinc-900 flex-1">
+                {/* STEP 1: What is a Fresh Customer? */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-700 mb-2">Step 1: What is a Fresh Customer?</p>
+                  <p className="text-xs text-blue-600">
+                    A customer placing their <strong>first-ever order</strong>. We measure success by whether they
+                    return for a <strong>2nd order within {FRESH_CUSTOMERS.conversionWindow} days</strong>.
+                  </p>
                 </div>
 
-                {/* Conversion Metrics */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border">
+                {/* STEP 2: Before vs After Comparison */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border">
+                  <p className="font-semibold mb-2">Step 2: Before vs After Club Launch</p>
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
-                        <th className="py-2 text-left font-medium">Metric</th>
-                        <th className="py-2 text-right font-medium">Before</th>
-                        <th className="py-2 text-right font-medium">After</th>
-                        <th className="py-2 text-right font-medium">Δ</th>
+                      <tr className="border-b">
+                        <th className="py-1.5 text-left"></th>
+                        <th className="py-1.5 text-right">Before Club<br/><span className="font-normal text-muted-foreground">{FRESH_CUSTOMERS.beforeLabel}</span></th>
+                        <th className="py-1.5 text-right">After Club<br/><span className="font-normal text-muted-foreground">{FRESH_CUSTOMERS.afterLabel}</span></th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b">
-                        <td className="py-1.5">Converted (60d)</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
-                        <td className="py-1.5 text-right font-mono">-</td>
-                      </tr>
-                      <tr className="border-b bg-amber-50 dark:bg-amber-950/30">
-                        <td className="py-1.5 font-medium">Conv. Rate</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterConversionRate}%</td>
-                        <td className="py-1.5 text-right font-mono font-bold text-red-600">{FRESH_CUSTOMERS.rateLiftPP}pp</td>
+                        <td className="py-1.5">New customers</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeNewCustomers)}</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)}</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1.5">Avg Days</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeAvgDays}</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterAvgDays}</td>
-                        <td className="py-1.5 text-right font-mono text-green-600">+0.00</td>
+                        <td className="py-1.5">Converted (2nd order in 60d)</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
                       </tr>
-                      <tr>
-                        <td className="py-1.5">Median Days</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeMedianDays}</td>
-                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterMedianDays}</td>
-                        <td className="py-1.5 text-right font-mono text-green-600">-1</td>
+                      <tr className="bg-amber-50 dark:bg-amber-900/20">
+                        <td className="py-1.5 font-medium">Conversion Rate</td>
+                        <td className="py-1.5 text-right font-mono font-bold">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
+                        <td className="py-1.5 text-right font-mono font-bold text-red-600">{FRESH_CUSTOMERS.afterConversionRate}%</td>
                       </tr>
                     </tbody>
                   </table>
-                  <p className="text-[10px] text-muted-foreground mt-2">Avg days validated: diff only +0.003 days</p>
+                  <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs">
+                    <strong>Result:</strong> Conversion rate dropped by <span className="text-red-600 font-bold">{FRESH_CUSTOMERS.rateLiftPP}pp</span> (from {FRESH_CUSTOMERS.beforeConversionRate}% to {FRESH_CUSTOMERS.afterConversionRate}%)
+                  </div>
                 </div>
 
-                {/* Value Calculation */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
-                  <p className="font-semibold mb-2">Value Calculation</p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between"><span>① Rate Change:</span><span className="font-mono text-red-600">{FRESH_CUSTOMERS.rateLiftPP} pp</span></div>
-                    <div className="flex justify-between"><span>② New Customers/mo:</span><span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}</span></div>
-                    <div className="flex justify-between"><span>③ Lost Conversions:</span><span className="font-mono text-red-600">{formatNumber(FRESH_CUSTOMERS.extraConversionsPerMonth)}/mo</span></div>
-                    <div className="flex justify-between"><span>④ Profit per 2nd Order:</span><span className="font-mono">{FRESH_CUSTOMERS.profitPerConversion} DKK</span></div>
-                  </div>
-                  <div className="mt-2 pt-2 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-red-700">⑤ Monthly Value:</span>
-                      <span className="text-xl font-bold text-red-600">{formatCurrency(FRESH_CUSTOMERS.monthlyValue)}/mo</span>
+                {/* STEP 3: Cost Calculation - Lost Conversions */}
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
+                  <p className="font-semibold text-red-700 mb-2">Step 3: Cost from Lost Conversions</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>① Monthly new customers (after Club):</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)} ÷ 10 mo = <strong>{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}/mo</strong></span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>② Lost conversion rate:</span>
+                      <span className="font-mono text-red-600"><strong>{Math.abs(FRESH_CUSTOMERS.rateLiftPP)}%</strong> fewer convert</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>③ Lost conversions per month:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)} × {Math.abs(FRESH_CUSTOMERS.rateLiftPP)}% = <strong className="text-red-600">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)}/mo</strong></span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>④ Profit per 2nd order:</span>
+                      <span className="font-mono"><strong>{FRESH_CUSTOMERS.profitPerConversion} DKK</strong></span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-red-200 dark:bg-red-800/50 rounded font-medium">
+                      <span>⑤ Lost profit per month:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)} × {FRESH_CUSTOMERS.profitPerConversion} = <strong className="text-red-700">{formatNumber(FRESH_CUSTOMERS.lostProfitPerMonth)} DKK/mo</strong></span>
                     </div>
                   </div>
                 </div>
 
-                {/* Finding/Limitation/Action */}
-                <div className="p-2 bg-blue-100/50 dark:bg-blue-900/20 rounded text-[10px] text-muted-foreground space-y-1 mt-auto">
-                  <p><strong>Finding:</strong> 1st→2nd order rate {FRESH_CUSTOMERS.rateLiftPP}pp change. Speed unchanged.</p>
-                  <p><strong>Limitation:</strong> ALL customers (Club + Non-Club). May reflect market trends.</p>
-                  <p><strong>Action:</strong> Monitor whether Club marketing drives overall repeat behavior.</p>
+                {/* STEP 4: Cashback Cost for Converters */}
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
+                  <p className="font-semibold text-green-700 mb-2">Step 4: Cashback Cost for the {formatNumber(FRESH_CUSTOMERS.afterConverted)} Who DID Convert</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>Converters who used cashback on 2nd order:</span>
+                      <span className="font-mono"><strong>{FRESH_CUSTOMERS.convertersWithCashback}</strong> of {formatNumber(FRESH_CUSTOMERS.afterConverted)} ({FRESH_CUSTOMERS.converterCashbackRate}%)</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>Total cashback redeemed:</span>
+                      <span className="font-mono"><strong>{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK</strong></span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-green-200 dark:bg-green-800/50 rounded font-medium">
+                      <span>Monthly cashback cost:</span>
+                      <span className="font-mono text-green-700"><strong>{formatNumber(FRESH_CUSTOMERS.monthlyCashbackCost)} DKK/mo</strong></span>
+                    </div>
+                  </div>
+                  <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-[10px]">
+                    <strong>Why so low?</strong> Fresh customers EARN cashback on their 1st order, but by their 2nd order (within 60 days),
+                    they haven&apos;t accumulated enough to redeem. They need more orders to build up cashback balance.
+                  </div>
+                </div>
+
+                {/* STEP 5: Total Monthly Cost */}
+                <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg border-2 border-zinc-400">
+                  <p className="font-semibold mb-2">Step 5: Total Monthly Cost Breakdown</p>
+                  <table className="w-full text-xs">
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2">Cost 1: Lost conversion profit</td>
+                        <td className="py-2 text-right font-mono text-red-600">{formatNumber(FRESH_CUSTOMERS.costFromLostConversions)} DKK/mo</td>
+                        <td className="py-2 text-right text-muted-foreground">{FRESH_CUSTOMERS.pctFromLostConversions}%</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Cost 2: Cashback for converters</td>
+                        <td className="py-2 text-right font-mono text-green-600">{formatNumber(FRESH_CUSTOMERS.costFromCashback)} DKK/mo</td>
+                        <td className="py-2 text-right text-muted-foreground">{FRESH_CUSTOMERS.pctFromCashback}%</td>
+                      </tr>
+                      <tr className="bg-red-100 dark:bg-red-900/30 font-bold">
+                        <td className="py-2">TOTAL</td>
+                        <td className="py-2 text-right font-mono text-red-700">{formatNumber(FRESH_CUSTOMERS.totalMonthlyCost)} DKK/mo</td>
+                        <td className="py-2 text-right">100%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Key Insight */}
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg border-2 border-amber-400 text-xs">
+                  <p className="font-bold text-amber-700 mb-1">Key Insight for CEO</p>
+                  <p className="text-amber-600">
+                    The Fresh Customer cost is <strong>99.85% from lost conversions</strong> (fewer people returning for 2nd order),
+                    NOT from cashback costs. Cashback is negligible because fresh customers haven&apos;t built up balances yet.
+                  </p>
+                  <p className="text-amber-600 mt-2">
+                    <strong>Annual impact:</strong> {formatNumber(FRESH_CUSTOMERS.totalMonthlyCost)} × 12 = <strong>~{formatNumber(FRESH_CUSTOMERS.totalMonthlyCost * 12)} DKK/year</strong>
+                  </p>
                 </div>
               </div>
             </div>
