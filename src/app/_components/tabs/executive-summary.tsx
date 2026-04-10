@@ -281,6 +281,50 @@ const PROGRAM = {
   membersWithCashbackPercent: CORE_METRICS.cashbackSegments.hasBalance.percentage,
 };
 
+// ============================================================================
+// CONTROL GROUP ANALYSIS - Validates TRUE Club Effect
+// Compares Club members vs Non-Club customers with SAME criteria
+// Source: Control group analysis excluding CE orders (system orders)
+// ============================================================================
+const CONTROL_GROUP = {
+  methodology: "Compare Club members vs Non-Club customers meeting same criteria",
+  exclusions: "CE orders excluded (system orders, not customer purchases)",
+
+  best: {
+    clubCustomers: 4564,
+    controlCustomers: 272,
+    clubFreqChange: 62.2,      // Club members frequency change %
+    controlFreqChange: 63.3,   // Non-Club (control) frequency change %
+    trueClubEffectPP: -1.1,    // Club - Control = TRUE Club effect
+    originalMonthlyLift: 19.91,
+    trueMonthlyLift: 0.00,     // No Club effect (control did better!)
+    clubPortion: 0.000,        // 0% of lift due to Club
+    interpretation: "Control customers improved MORE than Club members. Frequency lift is natural behavior, NOT Club-driven.",
+  },
+
+  medium: {
+    clubCustomers: 4631,
+    controlCustomers: 606,
+    clubFreqChange: 403.6,     // Club members frequency change %
+    controlFreqChange: 349.9,  // Non-Club (control) frequency change %
+    trueClubEffectPP: 53.7,    // Club - Control = TRUE Club effect
+    originalMonthlyLift: 42.38,
+    trueMonthlyLift: 5.64,     // Only 5.64 DKK/mo is due to Club
+    clubPortion: 0.133,        // 13.3% of lift due to Club
+    interpretation: "Club adds +53.7pp additional frequency lift vs control. About 13% of observed lift is Club-driven.",
+  },
+
+  // Revised Annual Impact
+  annualImpact: {
+    bestOriginal: 1090554,     // What we thought (all lift = Club)
+    bestTrue: 0,               // TRUE Club effect
+    mediumOriginal: 2355023,   // What we thought (all lift = Club)
+    mediumTrue: 313275,        // TRUE Club effect
+    totalOriginal: 3445577,    // 3.4M DKK/year
+    totalTrue: 313275,         // 313K DKK/year (only 9% of original!)
+  },
+};
+
 // Per-member costs (monthly)
 const MONTHLY_COST_PER_MEMBER = COSTS.totalProgramCosts / PROGRAM.monthsAnalyzed / PROGRAM.totalClubMembers;
 
@@ -807,87 +851,137 @@ export function ExecutiveSummaryTab() {
             </div>
 
             {/* ============================================================ */}
-            {/* TOTAL ANNUAL IMPACT - Best + Medium Combined */}
+            {/* CONTROL GROUP ANALYSIS - TRUE CLUB EFFECT */}
             {/* ============================================================ */}
-            <div className="col-span-full border-2 border-purple-500 rounded-lg overflow-hidden bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
-              <div className="bg-purple-600 text-white p-3">
-                <h3 className="font-bold text-lg">📊 TOTAL ANNUAL IMPACT: Best + Medium Customers</h3>
-                <p className="text-purple-100 text-sm">Thesis 2: &quot;Get returning & loyal customers to buy even more often&quot;</p>
+            <div className="col-span-full border-2 border-amber-500 rounded-lg overflow-hidden">
+              <div className="bg-amber-600 text-white p-3">
+                <h3 className="font-bold text-lg">⚠️ CRITICAL: Control Group Analysis - TRUE Club Effect</h3>
+                <p className="text-amber-100 text-sm">Comparing Club members vs Non-Club customers with SAME criteria</p>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Best Customers Annual */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-green-200">
-                    <p className="text-sm font-semibold text-green-700 mb-2">Best Customers</p>
-                    <div className="space-y-1 text-xs">
+              <div className="p-4 space-y-4">
+                {/* Methodology */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-700 mb-2">Methodology</p>
+                  <p className="text-xs text-blue-600">
+                    To validate if frequency lift is truly due to Club membership, we compared Club members against
+                    <strong> Non-Club customers meeting the SAME criteria</strong> (control group).
+                    CE orders excluded (system orders, not customer purchases).
+                  </p>
+                </div>
+
+                {/* Control Group Comparison Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b-2 border-amber-300">
+                        <th className="py-2 text-left">Segment</th>
+                        <th className="py-2 text-center">Club Members</th>
+                        <th className="py-2 text-center">Control (Non-Club)</th>
+                        <th className="py-2 text-center">Club Freq Change</th>
+                        <th className="py-2 text-center">Control Freq Change</th>
+                        <th className="py-2 text-center font-bold text-amber-700">TRUE Club Effect</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b bg-red-50 dark:bg-red-900/20">
+                        <td className="py-2 font-medium">Best Customers</td>
+                        <td className="py-2 text-center font-mono">{formatNumber(CONTROL_GROUP.best.clubCustomers)}</td>
+                        <td className="py-2 text-center font-mono">{formatNumber(CONTROL_GROUP.best.controlCustomers)}</td>
+                        <td className="py-2 text-center font-mono text-green-600">+{CONTROL_GROUP.best.clubFreqChange}%</td>
+                        <td className="py-2 text-center font-mono text-green-600">+{CONTROL_GROUP.best.controlFreqChange}%</td>
+                        <td className="py-2 text-center font-mono font-bold text-red-600">{CONTROL_GROUP.best.trueClubEffectPP}pp</td>
+                      </tr>
+                      <tr className="border-b bg-green-50 dark:bg-green-900/20">
+                        <td className="py-2 font-medium">Medium Customers</td>
+                        <td className="py-2 text-center font-mono">{formatNumber(CONTROL_GROUP.medium.clubCustomers)}</td>
+                        <td className="py-2 text-center font-mono">{formatNumber(CONTROL_GROUP.medium.controlCustomers)}</td>
+                        <td className="py-2 text-center font-mono text-green-600">+{CONTROL_GROUP.medium.clubFreqChange}%</td>
+                        <td className="py-2 text-center font-mono text-green-600">+{CONTROL_GROUP.medium.controlFreqChange}%</td>
+                        <td className="py-2 text-center font-mono font-bold text-green-600">+{CONTROL_GROUP.medium.trueClubEffectPP}pp</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Interpretation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300">
+                    <p className="font-semibold text-red-700 mb-1">Best Customers: NO Club Effect</p>
+                    <p className="text-xs text-red-600">{CONTROL_GROUP.best.interpretation}</p>
+                    <div className="mt-2 p-2 bg-white dark:bg-zinc-800 rounded text-xs">
                       <div className="flex justify-between">
-                        <span>Members:</span>
-                        <span className="font-mono">{formatNumber(BEST_CUSTOMERS.sampleSize)}</span>
+                        <span>Original monthly lift:</span>
+                        <span className="font-mono line-through text-muted-foreground">+{CONTROL_GROUP.best.originalMonthlyLift.toFixed(2)} DKK</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Monthly lift/customer:</span>
-                        <span className="font-mono">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1">
-                        <span>Monthly total:</span>
-                        <span className="font-mono font-semibold">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
-                      </div>
-                      <div className="flex justify-between bg-green-100 dark:bg-green-900/30 p-1 rounded">
-                        <span className="font-semibold">Annual:</span>
-                        <span className="font-mono font-bold text-green-700">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue * 12))} DKK</span>
+                      <div className="flex justify-between font-bold text-red-600">
+                        <span>TRUE monthly lift:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.best.trueMonthlyLift.toFixed(2)} DKK</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Medium Customers Annual */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-teal-200">
-                    <p className="text-sm font-semibold text-teal-700 mb-2">Medium Customers</p>
-                    <div className="space-y-1 text-xs">
+                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg border border-green-300">
+                    <p className="font-semibold text-green-700 mb-1">Medium Customers: Club Helps (+{CONTROL_GROUP.medium.trueClubEffectPP}pp)</p>
+                    <p className="text-xs text-green-600">{CONTROL_GROUP.medium.interpretation}</p>
+                    <div className="mt-2 p-2 bg-white dark:bg-zinc-800 rounded text-xs">
                       <div className="flex justify-between">
-                        <span>Members:</span>
-                        <span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.sampleSize)}</span>
+                        <span>Original monthly lift:</span>
+                        <span className="font-mono line-through text-muted-foreground">+{CONTROL_GROUP.medium.originalMonthlyLift.toFixed(2)} DKK</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Monthly lift/customer:</span>
-                        <span className="font-mono">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1">
-                        <span>Monthly total:</span>
-                        <span className="font-mono font-semibold">{formatNumber(Math.round(MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
-                      </div>
-                      <div className="flex justify-between bg-teal-100 dark:bg-teal-900/30 p-1 rounded">
-                        <span className="font-semibold">Annual:</span>
-                        <span className="font-mono font-bold text-teal-700">{formatNumber(Math.round(MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue * 12))} DKK</span>
+                      <div className="flex justify-between font-bold text-green-600">
+                        <span>TRUE monthly lift:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.medium.trueMonthlyLift.toFixed(2)} DKK</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Combined Total */}
-                  <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 border-2 border-purple-400">
-                    <p className="text-sm font-semibold text-purple-700 mb-2">COMBINED TOTAL</p>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Total members:</span>
-                        <span className="font-mono">{formatNumber(BEST_CUSTOMERS.sampleSize + MEDIUM_CUSTOMERS.sampleSize)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1">
-                        <span>Monthly profit lift:</span>
-                        <span className="font-mono font-semibold">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
-                      </div>
-                      <div className="flex justify-between bg-purple-200 dark:bg-purple-800/50 p-2 rounded mt-2">
-                        <span className="font-bold">ANNUAL PROFIT LIFT:</span>
-                        <span className="font-mono font-bold text-purple-800 dark:text-purple-200 text-lg">{(Math.round((BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue) * 12) / 1000000).toFixed(1)}M DKK</span>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-purple-600 mt-2">
-                      Due to <strong>+{BEST_CUSTOMERS.frequencyChange}%</strong> (Best) and <strong>+{MEDIUM_CUSTOMERS.frequencyChange}%</strong> (Medium) frequency lift
-                    </p>
                   </div>
                 </div>
 
-                {/* Calculation breakdown */}
-                <div className="mt-3 p-2 bg-white dark:bg-zinc-800 rounded text-[10px] text-muted-foreground">
-                  <strong>Calculation:</strong> ({formatNumber(BEST_CUSTOMERS.sampleSize)} × {BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} + {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} × {MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)}) × 12 months = <strong className="text-purple-700">{formatNumber(Math.round((BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue) * 12))} DKK/year</strong>
+                {/* Revised Annual Impact */}
+                <div className="p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border-2 border-amber-400">
+                  <p className="font-bold text-amber-800 mb-3">REVISED ANNUAL IMPACT</p>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-amber-300">
+                        <th className="py-2 text-left">Segment</th>
+                        <th className="py-2 text-right">Original Estimate</th>
+                        <th className="py-2 text-right font-bold">TRUE Club Effect</th>
+                        <th className="py-2 text-right">Difference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2">Best Customers</td>
+                        <td className="py-2 text-right font-mono line-through text-muted-foreground">{formatNumber(CONTROL_GROUP.annualImpact.bestOriginal)} DKK</td>
+                        <td className="py-2 text-right font-mono font-bold text-red-600">{formatNumber(CONTROL_GROUP.annualImpact.bestTrue)} DKK</td>
+                        <td className="py-2 text-right font-mono text-red-600">-100%</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Medium Customers</td>
+                        <td className="py-2 text-right font-mono line-through text-muted-foreground">{formatNumber(CONTROL_GROUP.annualImpact.mediumOriginal)} DKK</td>
+                        <td className="py-2 text-right font-mono font-bold text-green-600">{formatNumber(CONTROL_GROUP.annualImpact.mediumTrue)} DKK</td>
+                        <td className="py-2 text-right font-mono text-red-600">-87%</td>
+                      </tr>
+                      <tr className="bg-amber-200 dark:bg-amber-800/50 font-bold">
+                        <td className="py-2">TOTAL</td>
+                        <td className="py-2 text-right font-mono line-through">{(CONTROL_GROUP.annualImpact.totalOriginal / 1000000).toFixed(1)}M DKK</td>
+                        <td className="py-2 text-right font-mono text-amber-800 text-lg">{formatNumber(CONTROL_GROUP.annualImpact.totalTrue)} DKK</td>
+                        <td className="py-2 text-right font-mono text-red-700">-91%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p className="text-[10px] text-amber-700 mt-2">
+                    Only {((CONTROL_GROUP.annualImpact.totalTrue / CONTROL_GROUP.annualImpact.totalOriginal) * 100).toFixed(0)}% of the originally estimated annual impact is attributable to Club membership.
+                    The remaining {(100 - (CONTROL_GROUP.annualImpact.totalTrue / CONTROL_GROUP.annualImpact.totalOriginal) * 100).toFixed(0)}% is natural customer behavior that would have occurred anyway.
+                  </p>
+                </div>
+
+                {/* Key Takeaway */}
+                <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg border">
+                  <p className="font-semibold mb-2">Key Takeaway</p>
+                  <ul className="text-xs space-y-1 text-muted-foreground">
+                    <li>• <strong>Best Customers:</strong> Frequency lift is natural behavior. These loyal customers would have increased orders regardless of Club.</li>
+                    <li>• <strong>Medium Customers:</strong> Club provides ~13% incremental lift ({formatNumber(CONTROL_GROUP.annualImpact.mediumTrue)} DKK/year).</li>
+                    <li>• <strong>Control group sizes are small</strong> (272 Best, 606 Medium), so confidence is limited.</li>
+                  </ul>
                 </div>
               </div>
             </div>
