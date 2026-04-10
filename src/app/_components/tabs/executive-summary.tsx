@@ -905,6 +905,20 @@ export function ExecutiveSummaryTab() {
                       <span>Total cashback redeemed:</span>
                       <span className="font-mono"><strong>{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK</strong></span>
                     </div>
+
+                    {/* How 762 DKK was calculated */}
+                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded border text-[10px] space-y-1">
+                      <p className="font-semibold text-muted-foreground">How is 762 DKK calculated?</p>
+                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                        <li>Query <code className="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">customer_cashback</code> table for all balance records</li>
+                        <li>For each customer, track balance changes over time</li>
+                        <li>When balance goes DOWN → customer redeemed cashback</li>
+                        <li>Filter to only 2nd orders of the 24,533 converters</li>
+                        <li>Sum all redemptions = <strong className="text-foreground">762 DKK</strong></li>
+                      </ol>
+                      <p className="text-muted-foreground pt-1">Only <strong className="text-foreground">12 orders</strong> had redemptions (avg 63.50 DKK each)</p>
+                    </div>
+
                     <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
                       <span>Analysis period:</span>
                       <span className="font-mono">{FRESH_CUSTOMERS.cashbackAnalysisMonths} months</span>
