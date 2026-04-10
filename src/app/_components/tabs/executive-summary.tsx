@@ -137,13 +137,33 @@ const BEST_CUSTOMERS = {
   // Order behavior (items per order & shipping)
   beforeItemsPerOrder: 2.34,
   afterItemsPerOrder: 2.25,
-  itemsPerOrderChange: -3.8,
+  itemsPerOrderChange: -0.09,
   beforeShippingPerOrder: 22.49,
   afterShippingPerOrder: 22.25,
-  shippingPerOrderChange: -1.1,
+  shippingPerOrderChange: -0.24,
   beforeFreeShippingPct: 36.4,
   afterFreeShippingPct: 37.4,
   freeShippingChangePP: 1.0,
+
+  // Cashback metrics
+  cbUsageRateBefore: 0,
+  cbUsageRateAfter: 9.0,
+  cbUsageChangePP: 9.0,
+  medianCbPerOrder: 73.55,
+
+  // Shipping Cost Calculation (Subsidy Zone Only: 199-449 DKK)
+  subsidyZoneOrders: 6910,
+  freeRateInZoneBefore: 31.9,
+  freeRateInZoneAfter: 37.4,
+  incrementalFreeRatePP: 5.5,
+  incrementalFreeOrders: 382,
+  avgShippingFee: 39,
+  totalShippingCost: 14898,
+  shippingCostPerCustomer: 3.25,
+  monthlyShippingCostPerCustomer: 0.30,
+
+  // Net Value Per Customer
+  netValuePerCustomer: 19.62,
 };
 
 // Segment 3: Medium Customers (Segment-Isolated - ONLY Club members)
@@ -178,13 +198,33 @@ const MEDIUM_CUSTOMERS = {
   // Order behavior (items per order & shipping)
   beforeItemsPerOrder: 2.10,
   afterItemsPerOrder: 2.11,
-  itemsPerOrderChange: 0.5,
+  itemsPerOrderChange: 0.01,
   beforeShippingPerOrder: 22.52,
   afterShippingPerOrder: 22.19,
-  shippingPerOrderChange: -1.5,
+  shippingPerOrderChange: -0.33,
   beforeFreeShippingPct: 35.4,
   afterFreeShippingPct: 37.2,
   freeShippingChangePP: 1.8,
+
+  // Cashback metrics
+  cbUsageRateBefore: 0,
+  cbUsageRateAfter: 6.3,
+  cbUsageChangePP: 6.3,
+  medianCbPerOrder: 68.63,
+
+  // Shipping Cost Calculation (Subsidy Zone Only: 199-449 DKK)
+  subsidyZoneOrders: 6153,
+  freeRateInZoneBefore: 31.3,
+  freeRateInZoneAfter: 37.2,
+  incrementalFreeRatePP: 5.9,
+  incrementalFreeOrders: 364,
+  avgShippingFee: 39,
+  totalShippingCost: 14196,
+  shippingCostPerCustomer: 3.04,
+  monthlyShippingCostPerCustomer: 0.28,
+
+  // Net Value Per Customer
+  netValuePerCustomer: 42.21,
 };
 
 // Segment 4: Fresh Customers (Period comparison - before/after Club launch)
@@ -512,311 +552,253 @@ export function ExecutiveSummaryTab() {
             </div>
 
             {/* ============================================================ */}
-            {/* SEGMENT 2: Best Customers (Robust Sample) */}
+            {/* SEGMENT 2: Best Customers - Detailed P&L */}
             {/* ============================================================ */}
             <div className="border-2 border-green-400 rounded-lg overflow-hidden flex flex-col">
-              {/* Header - Fixed height */}
-              <div className="bg-green-500 text-white p-4 min-h-[80px]">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
+              {/* Header */}
+              <div className="bg-green-500 text-white p-4 flex justify-between items-start">
+                <div>
                   <h3 className="font-bold text-lg">Best Customers</h3>
+                  <p className="text-green-100 text-sm">2+ orders, 60+ days in BOTH periods</p>
                 </div>
-                <p className="text-green-100 text-sm mt-1">Highly engaged repeat buyers (monthly metrics)</p>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{formatNumber(BEST_CUSTOMERS.sampleSize)}</p>
+                  <p className="text-green-100 text-xs">Club members</p>
+                </div>
               </div>
 
-              <div className="p-4 space-y-4 bg-green-50/30 dark:bg-green-950/10 flex-1 flex flex-col">
-                {/* ROW 1: Sample Definition */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-green-500" />
-                    <span className="font-semibold text-sm">Sample Definition</span>
+              <div className="p-4 space-y-4 bg-white dark:bg-zinc-900 flex-1">
+                {/* Full Metrics Table */}
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
+                      <th className="py-2 text-left font-medium">Metric</th>
+                      <th className="py-2 text-right font-medium">Before</th>
+                      <th className="py-2 text-right font-medium">After</th>
+                      <th className="py-2 text-right font-medium">Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1.5">Items/Order (AOQ)</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeItemsPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterItemsPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.itemsPerOrderChange}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Shipping/Order (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeShippingPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterShippingPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.shippingPerOrderChange}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5 text-green-600">Free Shipping %</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeFreeShippingPct}%</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterFreeShippingPct}%</td>
+                      <td className="py-1.5 text-right font-mono text-green-600">+{BEST_CUSTOMERS.freeShippingChangePP}pp</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5 text-orange-600 font-medium">Frequency</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterFrequency.toFixed(3)}</td>
+                      <td className="py-1.5 text-right font-mono text-orange-600 font-bold">+{BEST_CUSTOMERS.frequencyChange}%</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">CB Usage Rate</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.cbUsageRateBefore}%</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.cbUsageRateAfter}%</td>
+                      <td className="py-1.5 text-right font-mono">+{BEST_CUSTOMERS.cbUsageChangePP}pp</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Median CB/Order</td>
+                      <td className="py-1.5 text-right font-mono text-muted-foreground">-</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.medianCbPerOrder} DKK</td>
+                      <td className="py-1.5 text-right font-mono text-muted-foreground">-</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">AOV (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeAOV.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterAOV.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono text-red-600">{BEST_CUSTOMERS.aovChange}%</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Profit/Order (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeProfitPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterProfitPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono text-red-600">{BEST_CUSTOMERS.profitPerOrderChange}%</td>
+                    </tr>
+                    <tr className="bg-green-50 dark:bg-green-950/30">
+                      <td className="py-1.5 font-medium">Monthly Profit</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.beforeMonthlyProfit.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{BEST_CUSTOMERS.afterMonthlyProfit.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono font-bold text-green-600">+{BEST_CUSTOMERS.monthlyProfitChange}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-muted-foreground">Monthly Profit = Frequency × Profit/Order</p>
+
+                {/* Shipping Cost Calculation */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border text-xs">
+                  <p className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Shipping Cost Calculation (Subsidy Zone Only)</p>
+                  <p className="text-[10px] text-muted-foreground mb-2">Note: These rates are for orders in the 199-449 DKK zone only, NOT the overall free shipping rate shown above.</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between"><span>Orders in subsidy zone (199-449 DKK):</span><span className="font-mono">{formatNumber(BEST_CUSTOMERS.subsidyZoneOrders)} orders</span></div>
+                    <div className="flex justify-between"><span>Free shipping rate in zone BEFORE:</span><span className="font-mono">{BEST_CUSTOMERS.freeRateInZoneBefore}%</span></div>
+                    <div className="flex justify-between"><span>Free shipping rate in zone AFTER:</span><span className="font-mono">{BEST_CUSTOMERS.freeRateInZoneAfter}%</span></div>
+                    <div className="flex justify-between text-green-600"><span>Incremental free rate (Club benefit):</span><span className="font-mono">+{BEST_CUSTOMERS.incrementalFreeRatePP}pp</span></div>
                   </div>
-                  <p className="text-sm font-medium">Same customers tracked before AND after joining</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded">
-                      <span className="text-muted-foreground">Before Joining</span>
-                      <p className="font-medium">2+ orders</p>
-                      <p className="text-[10px] text-muted-foreground">60+ days history</p>
-                    </div>
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded">
-                      <span className="text-green-700">After Joining</span>
-                      <p className="font-medium text-green-700">2+ orders</p>
-                      <p className="text-[10px] text-green-600">60+ days history</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-center">
-                    <span className="text-xs text-green-700">Sample: </span>
-                    <span className="font-mono font-bold text-green-700">{formatNumber(BEST_CUSTOMERS.sampleSize)} members</span>
+                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+                    <div className="flex justify-between"><span>Incremental free orders:</span><span className="font-mono">{formatNumber(BEST_CUSTOMERS.subsidyZoneOrders)} × {BEST_CUSTOMERS.incrementalFreeRatePP}% = {formatNumber(BEST_CUSTOMERS.incrementalFreeOrders)} orders</span></div>
+                    <div className="flex justify-between"><span>× Avg shipping fee:</span><span className="font-mono">× {BEST_CUSTOMERS.avgShippingFee} DKK</span></div>
+                    <div className="flex justify-between"><span>= Total shipping cost (11 mo):</span><span className="font-mono">{formatNumber(BEST_CUSTOMERS.totalShippingCost)} DKK</span></div>
+                    <div className="flex justify-between"><span>÷ {formatNumber(BEST_CUSTOMERS.sampleSize)} customers:</span><span className="font-mono">{BEST_CUSTOMERS.shippingCostPerCustomer} DKK/customer (11 mo)</span></div>
+                    <div className="flex justify-between font-medium"><span>Monthly shipping cost/customer:</span><span className="font-mono">{BEST_CUSTOMERS.monthlyShippingCostPerCustomer} DKK/mo</span></div>
                   </div>
                 </div>
 
-                {/* ROW 2: Metrics Table */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[180px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span className="font-semibold text-sm">Monthly Metrics</span>
+                {/* Monthly Value Per Customer */}
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
+                  <p className="font-semibold mb-2">Monthly Value Per Customer</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between"><span>Monthly Profit Lift:</span><span className="font-mono text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span></div>
+                    <div className="flex justify-between"><span>Shipping Cost/Customer:</span><span className="font-mono text-red-600">-{BEST_CUSTOMERS.monthlyShippingCostPerCustomer} DKK</span></div>
                   </div>
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-1 text-left text-muted-foreground">Metric</th>
-                        <th className="py-1 text-right text-muted-foreground">Before</th>
-                        <th className="py-1 text-right text-muted-foreground">After</th>
-                        <th className="py-1 text-right text-muted-foreground">Δ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Items/Order</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeItemsPerOrder.toFixed(2)}</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterItemsPerOrder.toFixed(2)}</td>
-                        <td className="py-1 text-right font-mono text-purple-600">{BEST_CUSTOMERS.itemsPerOrderChange}%</td>
-                      </tr>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Shipping/Order</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeShippingPerOrder.toFixed(0)} DKK</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterShippingPerOrder.toFixed(0)} DKK</td>
-                        <td className="py-1 text-right font-mono text-purple-600">+{BEST_CUSTOMERS.shippingPerOrderChange}%</td>
-                      </tr>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Free Shipping %</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeFreeShippingPct}%</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterFreeShippingPct}%</td>
-                        <td className="py-1 text-right font-mono text-purple-600">{BEST_CUSTOMERS.freeShippingChangePP}pp</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">Frequency</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterFrequency.toFixed(3)}</td>
-                        <td className="py-1 text-right font-mono text-green-600">+{BEST_CUSTOMERS.frequencyChange}%</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">AOV</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeAOV.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterAOV.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono text-red-600">{BEST_CUSTOMERS.aovChange}%</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">Profit/Order</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeProfitPerOrder.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterProfitPerOrder.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono text-red-600">{BEST_CUSTOMERS.profitPerOrderChange}%</td>
-                      </tr>
-                      <tr className="bg-green-50 dark:bg-green-950/30">
-                        <td className="py-1 font-medium">Monthly Profit</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.beforeMonthlyProfit.toFixed(1)}</td>
-                        <td className="py-1 text-right font-mono">{BEST_CUSTOMERS.afterMonthlyProfit.toFixed(1)}</td>
-                        <td className="py-1 text-right font-mono font-bold text-green-600">+{BEST_CUSTOMERS.monthlyProfitChange}%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="mt-2 p-1.5 bg-blue-50/50 dark:bg-blue-950/20 rounded text-[10px] text-blue-600">
-                    Monthly Profit = Frequency × Profit/Order
-                  </div>
-                  <div className="mt-2 p-2 bg-purple-50/50 dark:bg-purple-950/20 rounded text-[10px] text-purple-700">
-                    <strong>Order Behavior:</strong> Slightly smaller orders ({BEST_CUSTOMERS.itemsPerOrderChange}% items) but free shipping % unchanged ({BEST_CUSTOMERS.freeShippingChangePP}pp). Club members order more frequently with similar basket composition.
-                  </div>
-                </div>
-
-                {/* ROW 3: Measured Result */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="h-4 w-4 text-green-500" />
-                    <span className="font-semibold text-sm">Measured Monthly Uplift</span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Profit Before</span>
-                        <span className="font-mono">{BEST_CUSTOMERS.beforeMonthlyProfit.toFixed(1)} DKK</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Profit After</span>
-                        <span className="font-mono">{BEST_CUSTOMERS.afterMonthlyProfit.toFixed(1)} DKK</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded border border-green-200">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-green-700">Monthly Uplift per Customer</span>
-                        <span className="font-mono font-bold text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
-                      </div>
-                      <p className="text-[10px] text-green-600 mt-0.5">{BEST_CUSTOMERS.afterMonthlyProfit.toFixed(1)} − {BEST_CUSTOMERS.beforeMonthlyProfit.toFixed(1)} DKK</p>
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-700">Net Value/Customer:</span>
+                      <span className="text-xl font-bold text-green-600">+{BEST_CUSTOMERS.netValuePerCustomer} DKK/mo</span>
                     </div>
                   </div>
-                </div>
-
-                {/* ROW 4: Result + Note */}
-                <div className="mt-auto space-y-2">
-                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg border border-green-300 text-center">
-                    <p className="text-xs text-green-700">Monthly Uplift per Customer</p>
-                    <p className="text-2xl font-bold text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
-                    <p className="text-[10px] text-green-600 mt-1">Sample: {formatNumber(BEST_CUSTOMERS.sampleSize)} customers</p>
-                  </div>
-                  <div className="p-2 bg-green-100/50 dark:bg-green-900/20 rounded text-[10px] text-muted-foreground space-y-1">
-                    <p><strong>Finding:</strong> +{BEST_CUSTOMERS.frequencyChange}% frequency lift, +{BEST_CUSTOMERS.monthlyProfitChange}% monthly profit despite lower profit/order.</p>
-                    <p><strong>Limitation:</strong> Elite sample (2+ orders both periods) - not representative of all members.</p>
-                    <p><strong>Action:</strong> Maximize engagement to move more members into this cohort.</p>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">Note: Cashback is already reflected in profit figures (reduces revenue at redemption).</p>
                 </div>
               </div>
             </div>
 
             {/* ============================================================ */}
-            {/* SEGMENT 3: Medium Customers (Broader Sample) - NOW POSITIVE! */}
+            {/* SEGMENT 3: Medium Customers - Detailed P&L */}
             {/* ============================================================ */}
             <div className="border-2 border-teal-400 rounded-lg overflow-hidden flex flex-col">
-              {/* Header - Fixed height */}
-              <div className="bg-teal-500 text-white p-4 min-h-[80px]">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
+              {/* Header */}
+              <div className="bg-teal-500 text-white p-4 flex justify-between items-start">
+                <div>
                   <h3 className="font-bold text-lg">Medium Customers</h3>
+                  <p className="text-teal-100 text-sm">1+ before, 2+ orders & 60+ days after</p>
                 </div>
-                <p className="text-teal-100 text-sm mt-1">Broader sample incl. one-time buyers (monthly)</p>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{formatNumber(MEDIUM_CUSTOMERS.sampleSize)}</p>
+                  <p className="text-teal-100 text-xs">Club members</p>
+                </div>
               </div>
 
-              <div className="p-4 space-y-4 bg-teal-50/30 dark:bg-teal-950/10 flex-1 flex flex-col">
-                {/* ROW 1: Sample Definition */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-teal-500" />
-                    <span className="font-semibold text-sm">Sample Definition</span>
+              <div className="p-4 space-y-4 bg-white dark:bg-zinc-900 flex-1">
+                {/* Full Metrics Table */}
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
+                      <th className="py-2 text-left font-medium">Metric</th>
+                      <th className="py-2 text-right font-medium">Before</th>
+                      <th className="py-2 text-right font-medium">After</th>
+                      <th className="py-2 text-right font-medium">Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1.5">Items/Order (AOQ)</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeItemsPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterItemsPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">+{MEDIUM_CUSTOMERS.itemsPerOrderChange}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Shipping/Order (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeShippingPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterShippingPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.shippingPerOrderChange}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5 text-green-600">Free Shipping %</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFreeShippingPct}%</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterFreeShippingPct}%</td>
+                      <td className="py-1.5 text-right font-mono text-green-600">+{MEDIUM_CUSTOMERS.freeShippingChangePP}pp</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5 text-orange-600 font-medium">Frequency</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterFrequency.toFixed(3)}</td>
+                      <td className="py-1.5 text-right font-mono text-orange-600 font-bold">+{MEDIUM_CUSTOMERS.frequencyChange}%</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">CB Usage Rate</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.cbUsageRateBefore}%</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.cbUsageRateAfter}%</td>
+                      <td className="py-1.5 text-right font-mono">+{MEDIUM_CUSTOMERS.cbUsageChangePP}pp</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Median CB/Order</td>
+                      <td className="py-1.5 text-right font-mono text-muted-foreground">-</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.medianCbPerOrder} DKK</td>
+                      <td className="py-1.5 text-right font-mono text-muted-foreground">-</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">AOV (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeAOV.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterAOV.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono text-red-600">{MEDIUM_CUSTOMERS.aovChange}%</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Profit/Order (DKK)</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeProfitPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterProfitPerOrder.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono text-red-600">{MEDIUM_CUSTOMERS.profitPerOrderChange}%</td>
+                    </tr>
+                    <tr className="bg-green-50 dark:bg-green-950/30">
+                      <td className="py-1.5 font-medium">Monthly Profit</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.beforeMonthlyProfit.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono">{MEDIUM_CUSTOMERS.afterMonthlyProfit.toFixed(2)}</td>
+                      <td className="py-1.5 text-right font-mono font-bold text-green-600">+{MEDIUM_CUSTOMERS.monthlyProfitChange}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-muted-foreground">Monthly Profit = Frequency × Profit/Order</p>
+
+                {/* Shipping Cost Calculation */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border text-xs">
+                  <p className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Shipping Cost Calculation (Subsidy Zone Only)</p>
+                  <p className="text-[10px] text-muted-foreground mb-2">Note: These rates are for orders in the 199-449 DKK zone only, NOT the overall free shipping rate shown above.</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between"><span>Orders in subsidy zone (199-449 DKK):</span><span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.subsidyZoneOrders)} orders</span></div>
+                    <div className="flex justify-between"><span>Free shipping rate in zone BEFORE:</span><span className="font-mono">{MEDIUM_CUSTOMERS.freeRateInZoneBefore}%</span></div>
+                    <div className="flex justify-between"><span>Free shipping rate in zone AFTER:</span><span className="font-mono">{MEDIUM_CUSTOMERS.freeRateInZoneAfter}%</span></div>
+                    <div className="flex justify-between text-green-600"><span>Incremental free rate (Club benefit):</span><span className="font-mono">+{MEDIUM_CUSTOMERS.incrementalFreeRatePP}pp</span></div>
                   </div>
-                  <p className="text-sm font-medium">Same customers tracked before AND after joining</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded">
-                      <span className="text-muted-foreground">Before Joining</span>
-                      <p className="font-medium">1+ orders</p>
-                      <p className="text-[10px] text-muted-foreground">Any history</p>
-                    </div>
-                    <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded">
-                      <span className="text-teal-700">After Joining</span>
-                      <p className="font-medium text-teal-700">2+ orders</p>
-                      <p className="text-[10px] text-teal-600">60+ days history</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 p-2 bg-teal-100 dark:bg-teal-900/30 rounded text-center">
-                    <span className="text-xs text-teal-700">Sample: </span>
-                    <span className="font-mono font-bold text-teal-700">{formatNumber(MEDIUM_CUSTOMERS.sampleSize)} members</span>
+                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+                    <div className="flex justify-between"><span>Incremental free orders:</span><span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.subsidyZoneOrders)} × {MEDIUM_CUSTOMERS.incrementalFreeRatePP}% = {formatNumber(MEDIUM_CUSTOMERS.incrementalFreeOrders)} orders</span></div>
+                    <div className="flex justify-between"><span>× Avg shipping fee:</span><span className="font-mono">× {MEDIUM_CUSTOMERS.avgShippingFee} DKK</span></div>
+                    <div className="flex justify-between"><span>= Total shipping cost (11 mo):</span><span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.totalShippingCost)} DKK</span></div>
+                    <div className="flex justify-between"><span>÷ {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} customers:</span><span className="font-mono">{MEDIUM_CUSTOMERS.shippingCostPerCustomer} DKK/customer (11 mo)</span></div>
+                    <div className="flex justify-between font-medium"><span>Monthly shipping cost/customer:</span><span className="font-mono">{MEDIUM_CUSTOMERS.monthlyShippingCostPerCustomer} DKK/mo</span></div>
                   </div>
                 </div>
 
-                {/* ROW 2: Metrics Table */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[180px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-teal-500" />
-                    <span className="font-semibold text-sm">Monthly Metrics</span>
+                {/* Monthly Value Per Customer */}
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
+                  <p className="font-semibold mb-2">Monthly Value Per Customer</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between"><span>Monthly Profit Lift:</span><span className="font-mono text-green-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span></div>
+                    <div className="flex justify-between"><span>Shipping Cost/Customer:</span><span className="font-mono text-red-600">-{MEDIUM_CUSTOMERS.monthlyShippingCostPerCustomer} DKK</span></div>
                   </div>
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-1 text-left text-muted-foreground">Metric</th>
-                        <th className="py-1 text-right text-muted-foreground">Before</th>
-                        <th className="py-1 text-right text-muted-foreground">After</th>
-                        <th className="py-1 text-right text-muted-foreground">Δ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Items/Order</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeItemsPerOrder.toFixed(2)}</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterItemsPerOrder.toFixed(2)}</td>
-                        <td className="py-1 text-right font-mono text-purple-600">{MEDIUM_CUSTOMERS.itemsPerOrderChange}%</td>
-                      </tr>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Shipping/Order</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeShippingPerOrder.toFixed(0)} DKK</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterShippingPerOrder.toFixed(0)} DKK</td>
-                        <td className="py-1 text-right font-mono text-purple-600">+{MEDIUM_CUSTOMERS.shippingPerOrderChange}%</td>
-                      </tr>
-                      <tr className="border-b bg-purple-50/50 dark:bg-purple-950/20">
-                        <td className="py-1 text-purple-700">Free Shipping %</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFreeShippingPct}%</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterFreeShippingPct}%</td>
-                        <td className="py-1 text-right font-mono text-purple-600">+{MEDIUM_CUSTOMERS.freeShippingChangePP}pp</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">Frequency</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeFrequency.toFixed(3)}</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterFrequency.toFixed(3)}</td>
-                        <td className="py-1 text-right font-mono text-green-600">+{MEDIUM_CUSTOMERS.frequencyChange}%</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">AOV</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeAOV.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterAOV.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono text-red-600">{MEDIUM_CUSTOMERS.aovChange}%</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1">Profit/Order</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeProfitPerOrder.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterProfitPerOrder.toFixed(0)}</td>
-                        <td className="py-1 text-right font-mono text-red-600">{MEDIUM_CUSTOMERS.profitPerOrderChange}%</td>
-                      </tr>
-                      <tr className="bg-green-50 dark:bg-green-950/30">
-                        <td className="py-1 font-medium">Monthly Profit</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.beforeMonthlyProfit.toFixed(1)}</td>
-                        <td className="py-1 text-right font-mono">{MEDIUM_CUSTOMERS.afterMonthlyProfit.toFixed(1)}</td>
-                        <td className="py-1 text-right font-mono font-bold text-green-600">+{MEDIUM_CUSTOMERS.monthlyProfitChange}%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="mt-2 p-1.5 bg-blue-50/50 dark:bg-blue-950/20 rounded text-[10px] text-blue-600">
-                    Monthly Profit = Frequency × Profit/Order
-                  </div>
-                  <div className="mt-2 p-2 bg-purple-50/50 dark:bg-purple-950/20 rounded text-[10px] text-purple-700">
-                    <strong>Order Behavior:</strong> Slightly smaller orders ({MEDIUM_CUSTOMERS.itemsPerOrderChange}% items) with free shipping % slightly up (+{MEDIUM_CUSTOMERS.freeShippingChangePP}pp). Lower threshold not cannibalizing revenue.
-                  </div>
-                </div>
-
-                {/* ROW 3: Measured Result */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="h-4 w-4 text-teal-500" />
-                    <span className="font-semibold text-sm">Measured Monthly Uplift</span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Profit Before</span>
-                        <span className="font-mono">{MEDIUM_CUSTOMERS.beforeMonthlyProfit.toFixed(1)} DKK</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Profit After</span>
-                        <span className="font-mono">{MEDIUM_CUSTOMERS.afterMonthlyProfit.toFixed(1)} DKK</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded border border-teal-200">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-teal-700">Monthly Uplift per Customer</span>
-                        <span className="font-mono font-bold text-teal-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
-                      </div>
-                      <p className="text-[10px] text-teal-600 mt-0.5">{MEDIUM_CUSTOMERS.afterMonthlyProfit.toFixed(1)} − {MEDIUM_CUSTOMERS.beforeMonthlyProfit.toFixed(1)} DKK</p>
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-teal-700">Net Value/Customer:</span>
+                      <span className="text-xl font-bold text-teal-600">+{MEDIUM_CUSTOMERS.netValuePerCustomer} DKK/mo</span>
                     </div>
                   </div>
-                </div>
-
-                {/* ROW 4: Result + Note */}
-                <div className="mt-auto space-y-2">
-                  <div className="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg border border-teal-300 text-center">
-                    <p className="text-xs text-teal-700">Monthly Uplift per Customer</p>
-                    <p className="text-2xl font-bold text-teal-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
-                    <p className="text-[10px] text-teal-600 mt-1">Sample: {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} customers</p>
-                  </div>
-                  <div className="p-2 bg-teal-100/50 dark:bg-teal-900/20 rounded text-[10px] text-teal-700 space-y-1">
-                    <p><strong>Finding:</strong> +{MEDIUM_CUSTOMERS.frequencyChange}% frequency lift. 38% one-time buyers converted to repeat.</p>
-                    <p><strong>Limitation:</strong> Broader sample includes regression-to-mean effects.</p>
-                    <p><strong>Action:</strong> Focus on converting one-time buyers to repeat customers via Club.</p>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">Note: Cashback is already reflected in profit figures (reduces revenue at redemption).</p>
                 </div>
               </div>
             </div>
 
             {/* ============================================================ */}
-            {/* SEGMENT 4: Fresh Customers (Period Comparison) */}
+            {/* SEGMENT 4: Fresh Customers - Keep the original structure */}
             {/* ============================================================ */}
             <div className="border-2 border-blue-400 rounded-lg overflow-hidden flex flex-col">
               {/* Header - Fixed height */}
@@ -830,7 +812,7 @@ export function ExecutiveSummaryTab() {
 
               <div className="p-4 space-y-4 bg-blue-50/30 dark:bg-blue-950/10 flex-1 flex flex-col">
                 {/* ROW 1: Sample Definition */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[140px]">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="h-4 w-4 text-blue-500" />
                     <span className="font-semibold text-sm">Sample Definition</span>
@@ -851,113 +833,74 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
 
-                {/* ROW 2: Metrics Table */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[180px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
-                    <span className="font-semibold text-sm">Conversion Metrics</span>
-                  </div>
+                {/* Conversion Metrics */}
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b">
-                        <th className="py-1 text-left text-muted-foreground">Metric</th>
-                        <th className="py-1 text-right text-muted-foreground">Before</th>
-                        <th className="py-1 text-right text-muted-foreground">After</th>
-                        <th className="py-1 text-right text-muted-foreground">Δ</th>
+                      <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
+                        <th className="py-2 text-left font-medium">Metric</th>
+                        <th className="py-2 text-right font-medium">Before</th>
+                        <th className="py-2 text-right font-medium">After</th>
+                        <th className="py-2 text-right font-medium">Δ</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b">
-                        <td className="py-1">Converted (60d)</td>
-                        <td className="py-1 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
-                        <td className="py-1 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
-                        <td className="py-1 text-right font-mono">-</td>
+                        <td className="py-1.5">Converted (60d)</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
+                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
+                        <td className="py-1.5 text-right font-mono">-</td>
                       </tr>
                       <tr className="border-b bg-amber-50 dark:bg-amber-950/30">
-                        <td className="py-1 font-medium">Conv. Rate</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.afterConversionRate}%</td>
-                        <td className="py-1 text-right font-mono font-bold text-amber-600">{FRESH_CUSTOMERS.rateLiftPP}pp</td>
+                        <td className="py-1.5 font-medium">Conv. Rate</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterConversionRate}%</td>
+                        <td className="py-1.5 text-right font-mono font-bold text-red-600">{FRESH_CUSTOMERS.rateLiftPP}pp</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-1">Avg Days</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.beforeAvgDays}</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.afterAvgDays}</td>
-                        <td className="py-1 text-right font-mono text-green-600">+0.00</td>
+                        <td className="py-1.5">Avg Days</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeAvgDays}</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterAvgDays}</td>
+                        <td className="py-1.5 text-right font-mono text-green-600">+0.00</td>
                       </tr>
                       <tr>
-                        <td className="py-1">Median Days</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.beforeMedianDays}</td>
-                        <td className="py-1 text-right font-mono">{FRESH_CUSTOMERS.afterMedianDays}</td>
-                        <td className="py-1 text-right font-mono text-green-600">-1</td>
+                        <td className="py-1.5">Median Days</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.beforeMedianDays}</td>
+                        <td className="py-1.5 text-right font-mono">{FRESH_CUSTOMERS.afterMedianDays}</td>
+                        <td className="py-1.5 text-right font-mono text-green-600">-1</td>
                       </tr>
                     </tbody>
                   </table>
-                  <div className="mt-2 p-1.5 bg-green-50/50 dark:bg-green-950/20 rounded text-[10px] text-green-600">
-                    Avg days validated: diff only +0.003 days
-                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">Avg days validated: diff only +0.003 days</p>
                 </div>
 
-                {/* ROW 3: Value Calculation */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border min-h-[160px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="h-4 w-4 text-blue-500" />
-                    <span className="font-semibold text-sm">Value Calculation</span>
+                {/* Value Calculation */}
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
+                  <p className="font-semibold mb-2">Value Calculation</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between"><span>① Rate Change:</span><span className="font-mono text-red-600">{FRESH_CUSTOMERS.rateLiftPP} pp</span></div>
+                    <div className="flex justify-between"><span>② New Customers/mo:</span><span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}</span></div>
+                    <div className="flex justify-between"><span>③ Lost Conversions:</span><span className="font-mono text-red-600">{formatNumber(FRESH_CUSTOMERS.extraConversionsPerMonth)}/mo</span></div>
+                    <div className="flex justify-between"><span>④ Profit per 2nd Order:</span><span className="font-mono">{FRESH_CUSTOMERS.profitPerConversion} DKK</span></div>
                   </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">① Rate Change</span>
-                        <span className="font-mono text-amber-600">{FRESH_CUSTOMERS.rateLiftPP} pp</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{FRESH_CUSTOMERS.afterConversionRate}% − {FRESH_CUSTOMERS.beforeConversionRate}% = {FRESH_CUSTOMERS.rateLiftPP}pp</p>
-                    </div>
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">② New Customers/mo</span>
-                        <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)} ÷ 10 months</p>
-                    </div>
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded border border-amber-200">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-amber-700">③ Lost Conversions</span>
-                        <span className="font-mono font-bold text-amber-600">{formatNumber(FRESH_CUSTOMERS.extraConversionsPerMonth)}/mo</span>
-                      </div>
-                      <p className="text-[10px] text-amber-600 mt-0.5">{FRESH_CUSTOMERS.rateLiftPP}% × {formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)} = {formatNumber(FRESH_CUSTOMERS.extraConversionsPerMonth)} fewer 2nd orders</p>
-                    </div>
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">④ Profit per 2nd Order</span>
-                        <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.profitPerConversion)} DKK</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Avg profit from 2nd orders (after period, {formatNumber(FRESH_CUSTOMERS.afterConverted)} orders)</p>
-                    </div>
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded border border-amber-200">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-amber-700">⑤ Monthly Value</span>
-                        <span className="font-mono font-bold text-amber-600">{formatCurrency(FRESH_CUSTOMERS.monthlyValue)}/mo</span>
-                      </div>
-                      <p className="text-[10px] text-amber-600 mt-0.5">{formatNumber(FRESH_CUSTOMERS.extraConversionsPerMonth)} lost × {formatNumber(FRESH_CUSTOMERS.profitPerConversion)} DKK profit</p>
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-red-700">⑤ Monthly Value:</span>
+                      <span className="text-xl font-bold text-red-600">{formatCurrency(FRESH_CUSTOMERS.monthlyValue)}/mo</span>
                     </div>
                   </div>
                 </div>
 
-                {/* ROW 4: Result + Note */}
-                <div className="mt-auto space-y-2">
-                  <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-300 text-center">
-                    <p className="text-xs text-amber-700">Est. Monthly Value</p>
-                    <p className="text-2xl font-bold text-amber-600">{FRESH_CUSTOMERS.monthlyValue >= 0 ? '+' : ''}{formatCurrency(FRESH_CUSTOMERS.monthlyValue)}</p>
-                  </div>
-                  <div className="p-2 bg-blue-100/50 dark:bg-blue-900/20 rounded text-[10px] text-muted-foreground space-y-1">
-                    <p><strong>Finding:</strong> 1st→2nd order rate {FRESH_CUSTOMERS.rateLiftPP}pp change. Speed unchanged.</p>
-                    <p><strong>Limitation:</strong> ALL customers (Club + Non-Club). May reflect market trends.</p>
-                    <p><strong>Action:</strong> Monitor whether Club marketing drives overall repeat behavior.</p>
-                  </div>
+                {/* Finding/Limitation/Action */}
+                <div className="p-2 bg-blue-100/50 dark:bg-blue-900/20 rounded text-[10px] text-muted-foreground space-y-1 mt-auto">
+                  <p><strong>Finding:</strong> 1st→2nd order rate {FRESH_CUSTOMERS.rateLiftPP}pp change. Speed unchanged.</p>
+                  <p><strong>Limitation:</strong> ALL customers (Club + Non-Club). May reflect market trends.</p>
+                  <p><strong>Action:</strong> Monitor whether Club marketing drives overall repeat behavior.</p>
                 </div>
               </div>
             </div>
           </div>
+
 
           {/* ================================================================ */}
           {/* CRITICAL: WHERE ARE THE 201K CLUB MEMBERS?                       */}
