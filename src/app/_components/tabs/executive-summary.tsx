@@ -106,81 +106,85 @@ const CLUB_PROGRAM = {
   roi: CORE_METRICS.value.roi,
 };
 
-// Segment 2: Best Customers (Robust Sample - 2+ orders before AND after)
+// Segment 2: Best Customers (Segment-Isolated - ONLY Club members)
+// Source: scripts/segment_pnl_isolated.py
+// Filter: Club members with 2+ orders AND 60+ days span in BOTH periods
 const BEST_CUSTOMERS = {
   // Sample
-  sampleSize: CORE_METRICS.orderHistory.robustSampleSize,
+  sampleSize: 4589,
   sampleDescription: "2+ orders BEFORE and AFTER joining Club",
-  criteria: "60+ days history in both periods",
+  criteria: "60+ days history in both periods, Club members only",
 
   // Metrics - Before
-  beforeFrequency: CORE_METRICS.orderHistory.before.frequency,
-  beforeAOV: CORE_METRICS.orderHistory.before.avgOrderValue,
-  beforeProfitPerOrder: CORE_METRICS.orderHistory.before.profitPerOrder,
-  beforeMonthlyProfit: CORE_METRICS.orderHistory.before.monthlyProfit,
+  beforeFrequency: 0.179,
+  beforeAOV: 500.54,
+  beforeProfitPerOrder: 243.83,
+  beforeMonthlyProfit: 43.71,
 
   // Metrics - After
-  afterFrequency: CORE_METRICS.orderHistory.after.frequency,
-  afterAOV: CORE_METRICS.orderHistory.after.avgOrderValue,
-  afterProfitPerOrder: CORE_METRICS.orderHistory.after.profitPerOrder,
-  afterMonthlyProfit: CORE_METRICS.orderHistory.after.monthlyProfit,
+  afterFrequency: 0.291,
+  afterAOV: 452.32,
+  afterProfitPerOrder: 218.83,
+  afterMonthlyProfit: 63.63,
 
   // Changes
-  frequencyChange: CORE_METRICS.orderHistory.changes.frequencyChange,
-  aovChange: CORE_METRICS.orderHistory.changes.aovChange,
-  profitPerOrderChange: CORE_METRICS.orderHistory.changes.profitPerOrderChange,
-  monthlyProfitChange: CORE_METRICS.orderHistory.changes.monthlyProfitChange,
-  incrementalMonthlyValue: CORE_METRICS.orderHistory.changes.incrementalMonthlyValue,
+  frequencyChange: 62.2,
+  aovChange: -9.6,
+  profitPerOrderChange: -10.3,
+  monthlyProfitChange: 45.6,
+  incrementalMonthlyValue: 19.92,
 
   // Order behavior (items per order & shipping)
-  beforeItemsPerOrder: CORE_METRICS.orderHistory.orderBehavior.before.itemsPerOrder,
-  afterItemsPerOrder: CORE_METRICS.orderHistory.orderBehavior.after.itemsPerOrder,
-  itemsPerOrderChange: CORE_METRICS.orderHistory.orderBehavior.changes.itemsPerOrderPct,
-  beforeShippingPerOrder: CORE_METRICS.orderHistory.orderBehavior.before.shippingPerOrder,
-  afterShippingPerOrder: CORE_METRICS.orderHistory.orderBehavior.after.shippingPerOrder,
-  shippingPerOrderChange: CORE_METRICS.orderHistory.orderBehavior.changes.shippingPerOrderPct,
-  beforeFreeShippingPct: CORE_METRICS.orderHistory.orderBehavior.before.freeShippingPct,
-  afterFreeShippingPct: CORE_METRICS.orderHistory.orderBehavior.after.freeShippingPct,
-  freeShippingChangePP: CORE_METRICS.orderHistory.orderBehavior.changes.freeShippingChangePP,
+  beforeItemsPerOrder: 2.34,
+  afterItemsPerOrder: 2.25,
+  itemsPerOrderChange: -3.8,
+  beforeShippingPerOrder: 22.49,
+  afterShippingPerOrder: 22.25,
+  shippingPerOrderChange: -1.1,
+  beforeFreeShippingPct: 36.4,
+  afterFreeShippingPct: 37.4,
+  freeShippingChangePP: 1.0,
 };
 
-// Segment 3: Medium Customers (Broader Sample - 1+ order before, 2+ after)
+// Segment 3: Medium Customers (Segment-Isolated - ONLY Club members)
+// Source: scripts/segment_pnl_isolated.py
+// Filter: Club members with 1+ order before, 2+ orders AND 60+ days after
 const MEDIUM_CUSTOMERS = {
   // Sample
-  sampleSize: CORE_METRICS.orderHistory.broaderSample.sampleSize,
+  sampleSize: 4664,
   sampleDescription: "1+ order BEFORE, 2+ orders AFTER joining",
-  multiOrderBefore: CORE_METRICS.orderHistory.broaderSample.multiOrderBefore,
-  singleOrderBefore: CORE_METRICS.orderHistory.broaderSample.singleOrderBefore,
+  multiOrderBefore: 0,
+  singleOrderBefore: 0,
 
   // Metrics - Before
-  beforeFrequency: CORE_METRICS.orderHistory.broaderSample.before.frequency,
-  beforeAOV: CORE_METRICS.orderHistory.broaderSample.before.avgOrderValue,
-  beforeProfitPerOrder: CORE_METRICS.orderHistory.broaderSample.before.profitPerOrder,
-  beforeMonthlyProfit: CORE_METRICS.orderHistory.broaderSample.before.monthlyProfit,
+  beforeFrequency: 0.049,
+  beforeAOV: 464.78,
+  beforeProfitPerOrder: 232.38,
+  beforeMonthlyProfit: 11.42,
 
   // Metrics - After
-  afterFrequency: CORE_METRICS.orderHistory.broaderSample.after.frequency,
-  afterAOV: CORE_METRICS.orderHistory.broaderSample.after.avgOrderValue,
-  afterProfitPerOrder: CORE_METRICS.orderHistory.broaderSample.after.profitPerOrder,
-  afterMonthlyProfit: CORE_METRICS.orderHistory.broaderSample.after.monthlyProfit,
+  afterFrequency: 0.248,
+  afterAOV: 443.70,
+  afterProfitPerOrder: 217.77,
+  afterMonthlyProfit: 53.91,
 
   // Changes
-  frequencyChange: CORE_METRICS.orderHistory.broaderSample.changes.frequencyChange,
-  aovChange: CORE_METRICS.orderHistory.broaderSample.changes.aovChange,
-  profitPerOrderChange: CORE_METRICS.orderHistory.broaderSample.changes.profitPerOrderChange,
-  monthlyProfitChange: CORE_METRICS.orderHistory.broaderSample.changes.monthlyProfitChange,
-  incrementalMonthlyValue: CORE_METRICS.orderHistory.broaderSample.changes.incrementalMonthlyValue,
+  frequencyChange: 403.8,
+  aovChange: -4.5,
+  profitPerOrderChange: -6.3,
+  monthlyProfitChange: 372.2,
+  incrementalMonthlyValue: 42.49,
 
   // Order behavior (items per order & shipping)
-  beforeItemsPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.before.itemsPerOrder,
-  afterItemsPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.after.itemsPerOrder,
-  itemsPerOrderChange: CORE_METRICS.orderHistory.broaderSample.orderBehavior.changes.itemsPerOrderPct,
-  beforeShippingPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.before.shippingPerOrder,
-  afterShippingPerOrder: CORE_METRICS.orderHistory.broaderSample.orderBehavior.after.shippingPerOrder,
-  shippingPerOrderChange: CORE_METRICS.orderHistory.broaderSample.orderBehavior.changes.shippingPerOrderPct,
-  beforeFreeShippingPct: CORE_METRICS.orderHistory.broaderSample.orderBehavior.before.freeShippingPct,
-  afterFreeShippingPct: CORE_METRICS.orderHistory.broaderSample.orderBehavior.after.freeShippingPct,
-  freeShippingChangePP: CORE_METRICS.orderHistory.broaderSample.orderBehavior.changes.freeShippingChangePP,
+  beforeItemsPerOrder: 2.10,
+  afterItemsPerOrder: 2.11,
+  itemsPerOrderChange: 0.5,
+  beforeShippingPerOrder: 22.52,
+  afterShippingPerOrder: 22.19,
+  shippingPerOrderChange: -1.5,
+  beforeFreeShippingPct: 35.4,
+  afterFreeShippingPct: 37.2,
+  freeShippingChangePP: 1.8,
 };
 
 // Segment 4: Fresh Customers (Period comparison - before/after Club launch)
