@@ -807,6 +807,92 @@ export function ExecutiveSummaryTab() {
             </div>
 
             {/* ============================================================ */}
+            {/* TOTAL ANNUAL IMPACT - Best + Medium Combined */}
+            {/* ============================================================ */}
+            <div className="col-span-full border-2 border-purple-500 rounded-lg overflow-hidden bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
+              <div className="bg-purple-600 text-white p-3">
+                <h3 className="font-bold text-lg">📊 TOTAL ANNUAL IMPACT: Best + Medium Customers</h3>
+                <p className="text-purple-100 text-sm">Thesis 2: &quot;Get returning & loyal customers to buy even more often&quot;</p>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Best Customers Annual */}
+                  <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-green-200">
+                    <p className="text-sm font-semibold text-green-700 mb-2">Best Customers</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Members:</span>
+                        <span className="font-mono">{formatNumber(BEST_CUSTOMERS.sampleSize)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Monthly lift/customer:</span>
+                        <span className="font-mono">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1">
+                        <span>Monthly total:</span>
+                        <span className="font-mono font-semibold">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
+                      </div>
+                      <div className="flex justify-between bg-green-100 dark:bg-green-900/30 p-1 rounded">
+                        <span className="font-semibold">Annual:</span>
+                        <span className="font-mono font-bold text-green-700">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue * 12))} DKK</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medium Customers Annual */}
+                  <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-teal-200">
+                    <p className="text-sm font-semibold text-teal-700 mb-2">Medium Customers</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Members:</span>
+                        <span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.sampleSize)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Monthly lift/customer:</span>
+                        <span className="font-mono">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1">
+                        <span>Monthly total:</span>
+                        <span className="font-mono font-semibold">{formatNumber(Math.round(MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
+                      </div>
+                      <div className="flex justify-between bg-teal-100 dark:bg-teal-900/30 p-1 rounded">
+                        <span className="font-semibold">Annual:</span>
+                        <span className="font-mono font-bold text-teal-700">{formatNumber(Math.round(MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue * 12))} DKK</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Combined Total */}
+                  <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 border-2 border-purple-400">
+                    <p className="text-sm font-semibold text-purple-700 mb-2">COMBINED TOTAL</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Total members:</span>
+                        <span className="font-mono">{formatNumber(BEST_CUSTOMERS.sampleSize + MEDIUM_CUSTOMERS.sampleSize)}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1">
+                        <span>Monthly profit lift:</span>
+                        <span className="font-mono font-semibold">{formatNumber(Math.round(BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue))} DKK</span>
+                      </div>
+                      <div className="flex justify-between bg-purple-200 dark:bg-purple-800/50 p-2 rounded mt-2">
+                        <span className="font-bold">ANNUAL PROFIT LIFT:</span>
+                        <span className="font-mono font-bold text-purple-800 dark:text-purple-200 text-lg">{(Math.round((BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue) * 12) / 1000000).toFixed(1)}M DKK</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-purple-600 mt-2">
+                      Due to <strong>+{BEST_CUSTOMERS.frequencyChange}%</strong> (Best) and <strong>+{MEDIUM_CUSTOMERS.frequencyChange}%</strong> (Medium) frequency lift
+                    </p>
+                  </div>
+                </div>
+
+                {/* Calculation breakdown */}
+                <div className="mt-3 p-2 bg-white dark:bg-zinc-800 rounded text-[10px] text-muted-foreground">
+                  <strong>Calculation:</strong> ({formatNumber(BEST_CUSTOMERS.sampleSize)} × {BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} + {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} × {MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)}) × 12 months = <strong className="text-purple-700">{formatNumber(Math.round((BEST_CUSTOMERS.sampleSize * BEST_CUSTOMERS.incrementalMonthlyValue + MEDIUM_CUSTOMERS.sampleSize * MEDIUM_CUSTOMERS.incrementalMonthlyValue) * 12))} DKK/year</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* ============================================================ */}
             {/* SEGMENT 4: Fresh Customers - Detailed P&L Breakdown */}
             {/* ============================================================ */}
             <div className="border-2 border-red-400 rounded-lg overflow-hidden flex flex-col">
