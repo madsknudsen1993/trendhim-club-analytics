@@ -231,6 +231,60 @@ const PROGRAM = {
 // Per-member costs (monthly)
 const MONTHLY_COST_PER_MEMBER = COSTS.totalProgramCosts / PROGRAM.monthsAnalyzed / PROGRAM.totalClubMembers;
 
+// ============================================================================
+// CLUB MEMBER BREAKDOWN - SIMPLE DEFINITION (matches P&L segments)
+// Using customerGroupKey = 'club' (201,477 members)
+// Includes order type distinction: Club orders vs Non-Club orders
+// ============================================================================
+const CLUB_MEMBER_BREAKDOWN = {
+  total: 201477,
+  definition: "Simple", // customerGroupKey = 'club'
+  categories: [
+    {
+      name: "Best Customers",
+      count: 4589, pct: 2.3,
+      description: "2+ orders, 60+ days in BOTH periods",
+      clubOrders: 13343, nonClubOrders: 1342, clubOrdersPct: 90.9,
+      color: "green"
+    },
+    {
+      name: "Medium Customers",
+      count: 4664, pct: 2.3,
+      description: "1+ before, 2+ orders & 60+ days after",
+      clubOrders: 10925, nonClubOrders: 1782, clubOrdersPct: 86.0,
+      color: "teal"
+    },
+    {
+      name: "New Active",
+      count: 12000, pct: 6.0,
+      description: "No orders before, 2+ orders & 60+ days after",
+      clubOrders: 24561, nonClubOrders: 7381, clubOrdersPct: 76.9,
+      color: "blue"
+    },
+    {
+      name: "New Single-Order",
+      count: 114585, pct: 56.9,
+      description: "No orders before, only 1 Club order after",
+      clubOrders: 114585, nonClubOrders: 0, clubOrdersPct: 100.0,
+      color: "red"
+    },
+    {
+      name: "Lapsed Returned",
+      count: 36232, pct: 18.0,
+      description: "Had orders before, only 1 Club order after",
+      clubOrders: 36232, nonClubOrders: 0, clubOrdersPct: 100.0,
+      color: "amber"
+    },
+    {
+      name: "Inactive/Short Span",
+      count: 29407, pct: 14.6,
+      description: "2+ orders but < 60 days span",
+      clubOrders: 49631, nonClubOrders: 14487, clubOrdersPct: 77.4,
+      color: "zinc"
+    },
+  ],
+};
+
 // Channel Attribution Data (summary for executive view)
 const CHANNEL_DATA = [
   { channel: "Email", clubPct: 39.8, nonClubPct: 3.6, diff: 36.2 },
@@ -898,6 +952,142 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ================================================================ */}
+          {/* CRITICAL: WHERE ARE THE 201K CLUB MEMBERS?                       */}
+          {/* ================================================================ */}
+          <div className="mt-6 p-6 bg-gradient-to-br from-red-50 to-amber-50 dark:from-red-950/30 dark:to-amber-950/30 rounded-xl border-2 border-red-400">
+            <h4 className="font-bold text-xl mb-4 flex items-center gap-2 text-red-700">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+              Critical: Where Are the 201K Club Members?
+            </h4>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">Total Club Members</p>
+                <p className="text-2xl font-bold text-red-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.total)}</p>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">In Best + Medium P&L</p>
+                <p className="text-2xl font-bold text-green-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[0].count + CLUB_MEMBER_BREAKDOWN.categories[1].count)}</p>
+                <p className="text-xs text-green-600">{((CLUB_MEMBER_BREAKDOWN.categories[0].count + CLUB_MEMBER_BREAKDOWN.categories[1].count) / CLUB_MEMBER_BREAKDOWN.total * 100).toFixed(1)}%</p>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg text-center">
+                <p className="text-xs text-muted-foreground">NOT in P&L Analysis</p>
+                <p className="text-2xl font-bold text-red-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.total - CLUB_MEMBER_BREAKDOWN.categories[0].count - CLUB_MEMBER_BREAKDOWN.categories[1].count)}</p>
+                <p className="text-xs text-red-600">{((CLUB_MEMBER_BREAKDOWN.total - CLUB_MEMBER_BREAKDOWN.categories[0].count - CLUB_MEMBER_BREAKDOWN.categories[1].count) / CLUB_MEMBER_BREAKDOWN.total * 100).toFixed(1)}%</p>
+              </div>
+            </div>
+
+            {/* Compact Table */}
+            <div className="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg p-3">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-zinc-100 dark:bg-zinc-800">
+                    <th className="p-2 text-left font-medium">Category</th>
+                    <th className="p-2 text-right font-medium">Members</th>
+                    <th className="p-2 text-right font-medium">%</th>
+                    <th className="p-2 text-right font-medium">Club Orders</th>
+                    <th className="p-2 text-right font-medium">Non-Club</th>
+                    <th className="p-2 text-left font-medium">Order Flow (Before → After)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Best */}
+                  <tr className="border-b border-green-200 bg-green-50/50 dark:bg-green-900/10">
+                    <td className="p-2">
+                      <span className="font-medium text-green-700">Best</span>
+                      <Badge className="ml-1 bg-green-600 text-white text-[8px] px-1">P&L</Badge>
+                    </td>
+                    <td className="p-2 text-right font-mono font-bold text-green-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[0].count)}</td>
+                    <td className="p-2 text-right text-green-600">{CLUB_MEMBER_BREAKDOWN.categories[0].pct}%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[0].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[0].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px]">
+                      <span className="text-zinc-500">2+ non-Club</span> → <span className="text-green-600">2+ Club (60d+)</span>
+                    </td>
+                  </tr>
+                  {/* Medium */}
+                  <tr className="border-b border-teal-200 bg-teal-50/50 dark:bg-teal-900/10">
+                    <td className="p-2">
+                      <span className="font-medium text-teal-700">Medium</span>
+                      <Badge className="ml-1 bg-teal-600 text-white text-[8px] px-1">P&L</Badge>
+                    </td>
+                    <td className="p-2 text-right font-mono font-bold text-teal-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[1].count)}</td>
+                    <td className="p-2 text-right text-teal-600">{CLUB_MEMBER_BREAKDOWN.categories[1].pct}%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[1].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[1].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px]">
+                      <span className="text-zinc-500">1+ non-Club</span> → <span className="text-teal-600">2+ Club (60d+)</span>
+                    </td>
+                  </tr>
+                  {/* New Active */}
+                  <tr className="border-b bg-blue-50/30 dark:bg-blue-900/5">
+                    <td className="p-2"><span className="font-medium text-blue-700">New Active</span></td>
+                    <td className="p-2 text-right font-mono text-blue-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[2].count)}</td>
+                    <td className="p-2 text-right text-blue-600">{CLUB_MEMBER_BREAKDOWN.categories[2].pct}%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[2].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[2].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px]">
+                      <span className="text-zinc-400">No orders</span> → <span className="text-blue-600">2+ Club (60d+)</span>
+                    </td>
+                  </tr>
+                  {/* New Single - HIGHLIGHT */}
+                  <tr className="border-b-2 border-red-400 bg-red-100/70 dark:bg-red-900/20">
+                    <td className="p-2">
+                      <span className="font-bold text-red-700">New Single-Order</span>
+                      <Badge className="ml-1 bg-red-600 text-white text-[8px] px-1">!</Badge>
+                    </td>
+                    <td className="p-2 text-right font-mono font-bold text-red-600 text-sm">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].count)}</td>
+                    <td className="p-2 text-right font-bold text-red-600">{CLUB_MEMBER_BREAKDOWN.categories[3].pct}%</td>
+                    <td className="p-2 text-right font-mono text-red-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px]">
+                      <span className="text-zinc-400">No orders</span> → <span className="text-red-600 font-bold">1 Club only (never returned)</span>
+                    </td>
+                  </tr>
+                  {/* Lapsed */}
+                  <tr className="border-b bg-amber-50/30 dark:bg-amber-900/5">
+                    <td className="p-2"><span className="font-medium text-amber-700">Lapsed Returned</span></td>
+                    <td className="p-2 text-right font-mono text-amber-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[4].count)}</td>
+                    <td className="p-2 text-right text-amber-600">{CLUB_MEMBER_BREAKDOWN.categories[4].pct}%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[4].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[4].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px]">
+                      <span className="text-zinc-500">1+ non-Club</span> → <span className="text-amber-600">1 Club only</span>
+                    </td>
+                  </tr>
+                  {/* Inactive */}
+                  <tr className="bg-zinc-50/50 dark:bg-zinc-800/30">
+                    <td className="p-2"><span className="font-medium text-zinc-600">Inactive/Short</span></td>
+                    <td className="p-2 text-right font-mono text-zinc-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[5].count)}</td>
+                    <td className="p-2 text-right text-zinc-600">{CLUB_MEMBER_BREAKDOWN.categories[5].pct}%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[5].clubOrders)}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[5].nonClubOrders)}</td>
+                    <td className="p-2 text-[10px] text-muted-foreground">Mixed → 2+ Club (&lt;60d span)</td>
+                  </tr>
+                  {/* Total */}
+                  <tr className="bg-zinc-200 dark:bg-zinc-700 font-medium">
+                    <td className="p-2">TOTAL</td>
+                    <td className="p-2 text-right font-mono font-bold">{formatNumber(CLUB_MEMBER_BREAKDOWN.total)}</td>
+                    <td className="p-2 text-right">100%</td>
+                    <td className="p-2 text-right font-mono">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories.reduce((sum, c) => sum + c.clubOrders, 0))}</td>
+                    <td className="p-2 text-right font-mono text-zinc-500">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories.reduce((sum, c) => sum + c.nonClubOrders, 0))}</td>
+                    <td className="p-2"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Key Insight */}
+            <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded border-2 border-red-400 text-sm">
+              <p className="text-red-700">
+                <strong>Key Issue:</strong> {CLUB_MEMBER_BREAKDOWN.categories[3].pct}% of Club members ({formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].count)}) placed ONE Club order and never returned.
+                They got Club benefits (free shipping at 199 DKK) but generated no repeat business.
+              </p>
             </div>
           </div>
 
