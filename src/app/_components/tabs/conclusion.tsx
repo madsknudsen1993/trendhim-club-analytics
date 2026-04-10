@@ -74,6 +74,12 @@ const ORDER_HISTORY = {
   afterAOV: CORE_METRICS.orderHistory.after.avgOrderValue,
   afterProfitPerOrder: CORE_METRICS.orderHistory.after.profitPerOrder,
   afterMonthlyProfit: CORE_METRICS.orderHistory.after.monthlyProfit,
+
+  // Changes (from CORE_METRICS)
+  changes: CORE_METRICS.orderHistory.changes,
+
+  // Broader sample (for Medium Customers reference)
+  broaderSample: CORE_METRICS.orderHistory.broaderSample,
 };
 
 // Program costs from CORE_METRICS (10 month period)

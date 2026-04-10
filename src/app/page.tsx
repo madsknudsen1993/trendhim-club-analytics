@@ -18,6 +18,7 @@ import { FurtherInvestigationsTab } from "./_components/tabs/further-investigati
 import { OrderHistoryByCustomerTab } from "./_components/tabs/order-history-by-customer";
 import { DataSourceTab } from "./_components/tabs/data-source";
 import { ExecutiveSummaryTab } from "./_components/tabs/executive-summary";
+import { CeoQaTab } from "./_components/tabs/ceo-qa";
 
 interface OrdersData {
   month: string;
@@ -198,6 +199,7 @@ export default function AnalyticsPage() {
     { value: "investigations", label: "Further Analysis" },
     { value: "order-history", label: "Order History" },
     { value: "data", label: "Data Source" },
+    { value: "ceo-qa", label: "CEO Q&A" },
   ];
 
   return (
@@ -298,6 +300,10 @@ export default function AnalyticsPage() {
 
             <TabsContent value="data" className="mt-6">
               <DataSourceTab />
+            </TabsContent>
+
+            <TabsContent value="ceo-qa" className="mt-6">
+              <CeoQaTab />
             </TabsContent>
           </Tabs>
         </main>

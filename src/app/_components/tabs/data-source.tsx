@@ -539,7 +539,7 @@ export const FX_RATE_VALUES: Record<string, number> = Object.fromEntries(
 );
 
 export const SHIPPING_THRESHOLDS = {
-  DK: { club: 249, nonClub: 399, currency: "DKK" },
+  DK: { club: 199, nonClub: 449, currency: "DKK" },  // Corrected: Club 199, Non-Club 449
   SE: { club: 349, nonClub: 549, currency: "SEK" },
   NO: { club: 349, nonClub: 549, currency: "NOK" },
   DE: { club: 39, nonClub: 59, currency: "EUR" },
