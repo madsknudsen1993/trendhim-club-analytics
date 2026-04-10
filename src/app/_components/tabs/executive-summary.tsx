@@ -162,8 +162,11 @@ const BEST_CUSTOMERS = {
   shippingCostPerCustomer: 3.25,
   monthlyShippingCostPerCustomer: 0.30,
 
-  // Net Value Per Customer
-  netValuePerCustomer: 19.62,
+  // Net Value Per Customer (ORIGINAL - before control group validation)
+  netValuePerCustomerOriginal: 19.62,
+  // TRUE Club Effect (after control group analysis - see CONTROL_GROUP)
+  trueMonthlyLift: 0.00,  // Control group showed SAME improvement → NO Club effect
+  truePortion: 0.0,       // 0% of observed lift is attributable to Club
 };
 
 // Segment 3: Medium Customers (Segment-Isolated - ONLY Club members)
@@ -223,8 +226,11 @@ const MEDIUM_CUSTOMERS = {
   shippingCostPerCustomer: 3.04,
   monthlyShippingCostPerCustomer: 0.28,
 
-  // Net Value Per Customer
-  netValuePerCustomer: 42.21,
+  // Net Value Per Customer (ORIGINAL - before control group validation)
+  netValuePerCustomerOriginal: 42.21,
+  // TRUE Club Effect (after control group analysis - see CONTROL_GROUP)
+  trueMonthlyLift: 5.64,  // Club adds +53.7pp vs control → 13.3% of lift is Club-driven
+  truePortion: 0.133,     // 13.3% of observed lift is attributable to Club
 };
 
 // Segment 4: Fresh Customers (Period comparison - before/after Club launch)
@@ -709,20 +715,31 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
 
-                {/* Monthly Value Per Customer */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
-                  <p className="font-semibold mb-2">Monthly Value Per Customer</p>
+                {/* Monthly Value Per Customer - WITH CONTROL GROUP VALIDATION */}
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-300 text-xs">
+                  <p className="font-semibold mb-2 text-red-700">Monthly Value Per Customer (Control Validated)</p>
                   <div className="space-y-1">
-                    <div className="flex justify-between"><span>Monthly Profit Lift:</span><span className="font-mono text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span></div>
-                    <div className="flex justify-between"><span>Shipping Cost/Customer:</span><span className="font-mono text-red-600">-{BEST_CUSTOMERS.monthlyShippingCostPerCustomer} DKK</span></div>
-                  </div>
-                  <div className="mt-2 pt-2 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-700">Net Value/Customer:</span>
-                      <span className="text-xl font-bold text-green-600">+{BEST_CUSTOMERS.netValuePerCustomer} DKK/mo</span>
+                    <div className="flex justify-between">
+                      <span>Original Monthly Lift:</span>
+                      <span className="font-mono line-through text-muted-foreground">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Control Group Change:</span>
+                      <span className="font-mono text-amber-600">+{CONTROL_GROUP.best.controlFreqChange}% (same as Club!)</span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">Note: Cashback is already reflected in profit figures (reduces revenue at redemption).</p>
+                  <div className="mt-2 pt-2 border-t border-red-200">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-red-700">TRUE Club Effect:</span>
+                      <span className="text-xl font-bold text-red-600">+{BEST_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK/mo</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">
+                    <p className="text-[10px] text-red-700">
+                      <strong>Finding:</strong> Control customers (non-Club) improved +{CONTROL_GROUP.best.controlFreqChange}% vs Club +{CONTROL_GROUP.best.clubFreqChange}%.
+                      The frequency lift is <strong>natural behavior</strong>, NOT Club-driven.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -832,20 +849,35 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
 
-                {/* Monthly Value Per Customer */}
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-lg border text-xs">
-                  <p className="font-semibold mb-2">Monthly Value Per Customer</p>
+                {/* Monthly Value Per Customer - WITH CONTROL GROUP VALIDATION */}
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-300 text-xs">
+                  <p className="font-semibold mb-2 text-green-700">Monthly Value Per Customer (Control Validated)</p>
                   <div className="space-y-1">
-                    <div className="flex justify-between"><span>Monthly Profit Lift:</span><span className="font-mono text-green-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span></div>
-                    <div className="flex justify-between"><span>Shipping Cost/Customer:</span><span className="font-mono text-red-600">-{MEDIUM_CUSTOMERS.monthlyShippingCostPerCustomer} DKK</span></div>
-                  </div>
-                  <div className="mt-2 pt-2 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-teal-700">Net Value/Customer:</span>
-                      <span className="text-xl font-bold text-teal-600">+{MEDIUM_CUSTOMERS.netValuePerCustomer} DKK/mo</span>
+                    <div className="flex justify-between">
+                      <span>Original Monthly Lift:</span>
+                      <span className="font-mono line-through text-muted-foreground">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Control Group Change:</span>
+                      <span className="font-mono text-amber-600">+{CONTROL_GROUP.medium.controlFreqChange}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Club Portion ({(MEDIUM_CUSTOMERS.truePortion * 100).toFixed(1)}%):</span>
+                      <span className="font-mono text-green-600">+{MEDIUM_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK</span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">Note: Cashback is already reflected in profit figures (reduces revenue at redemption).</p>
+                  <div className="mt-2 pt-2 border-t border-green-200">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-700">TRUE Club Effect:</span>
+                      <span className="text-xl font-bold text-green-600">+{MEDIUM_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK/mo</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded">
+                    <p className="text-[10px] text-green-700">
+                      <strong>Finding:</strong> Club +{CONTROL_GROUP.medium.clubFreqChange}% vs Control +{CONTROL_GROUP.medium.controlFreqChange}% = <strong>+{CONTROL_GROUP.medium.trueClubEffectPP}pp Club effect</strong>.
+                      About {(MEDIUM_CUSTOMERS.truePortion * 100).toFixed(0)}% of the observed lift is Club-driven.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
