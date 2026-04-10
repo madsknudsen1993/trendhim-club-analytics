@@ -258,10 +258,11 @@ const FRESH_CUSTOMERS = {
   lostProfitPerMonth: 56933,
 
   // Cashback analysis for converters (from fresh_customer_cashback_analysis.py)
+  cashbackAnalysisMonths: 9, // Apr 2025 - Dec 2025 (minus 60-day conversion window)
   convertersWithCashback: 12,
   converterCashbackRate: 0.05,
   totalCashbackRedeemed: 762,
-  monthlyCashbackCost: 85,
+  monthlyCashbackCost: 85, // 762 ÷ 9 months = 85
 
   // Total monthly cost
   totalMonthlyCost: 57018,
@@ -903,6 +904,14 @@ export function ExecutiveSummaryTab() {
                     <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
                       <span>Total cashback redeemed:</span>
                       <span className="font-mono"><strong>{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK</strong></span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
+                      <span>Analysis period:</span>
+                      <span className="font-mono">{FRESH_CUSTOMERS.cashbackAnalysisMonths} months</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded text-[10px]">
+                      <span className="text-muted-foreground">Calculation:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK ÷ {FRESH_CUSTOMERS.cashbackAnalysisMonths} mo = <strong>{formatNumber(FRESH_CUSTOMERS.monthlyCashbackCost)} DKK/mo</strong></span>
                     </div>
                     <div className="flex justify-between items-center p-2 bg-green-200 dark:bg-green-800/50 rounded font-medium">
                       <span>Monthly cashback cost:</span>
