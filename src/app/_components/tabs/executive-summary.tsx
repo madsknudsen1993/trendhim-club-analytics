@@ -266,19 +266,19 @@ const FRESH_CUSTOMERS = {
   profitPerConversion: 197,
   lostProfitPerMonth: 56933,
 
-  // Cashback analysis for converters (from fresh_customer_cashback_analysis.py)
-  cashbackAnalysisMonths: 9, // Apr 2025 - Dec 2025 (minus 60-day conversion window)
-  convertersWithCashback: 12,
-  converterCashbackRate: 0.05,
-  totalCashbackRedeemed: 762,
-  monthlyCashbackCost: 85, // 762 ÷ 9 months = 85
+  // Cashback analysis for converters (CORRECTED: balance_cents = cashback spent)
+  cashbackAnalysisMonths: 10, // Apr 2025 - Jan 2026
+  convertersWithCashback: 6694,  // CORRECTED from 12
+  converterCashbackRate: 18.89,  // CORRECTED from 0.05%
+  totalCashbackRedeemed: 663707, // CORRECTED from 762
+  monthlyCashbackCost: 66371, // 663707 ÷ 10 months
 
   // Total monthly cost
-  totalMonthlyCost: 57018,
+  totalMonthlyCost: 123304, // 56933 + 66371
   costFromLostConversions: 56933,
-  costFromCashback: 85,
-  pctFromLostConversions: 99.85,
-  pctFromCashback: 0.15,
+  costFromCashback: 66371,
+  pctFromLostConversions: 46.2,  // Lost conversions now smaller share
+  pctFromCashback: 53.8,  // Cashback is now MAJORITY of cost
 };
 
 // Program constants
@@ -1240,7 +1240,7 @@ export function ExecutiveSummaryTab() {
                     </div>
                   </div>
                   <p className="text-[9px] text-amber-600 mt-1">
-                    Minimal impact: Cashback is only {FRESH_CUSTOMERS.pctFromCashback}% of total monthly cost.
+                    Significant: Cashback is {FRESH_CUSTOMERS.pctFromCashback}% of total monthly cost for converters.
                   </p>
                 </div>
 

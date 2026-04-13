@@ -83,21 +83,16 @@ def get_cashback_data():
     conn.close()
 
     if len(cashback_records) > 0:
-        # Calculate balance change per record (to detect redemptions)
-        # Group by customer and calculate running balance
+        # CORRECTED: balance_cents IS the cashback spent on each order (not a running balance)
+        # No need for balance change calculation - just use balance_cents directly
         cashback_records['recorded_at'] = pd.to_datetime(cashback_records['recorded_at'])
-        cashback_records = cashback_records.sort_values(['customer_id', 'recorded_at'])
 
-        # Calculate previous balance for each customer
-        cashback_records['prev_balance'] = cashback_records.groupby('customer_id')['balance_cents'].shift(1)
-        cashback_records['balance_change'] = cashback_records['balance_cents'] - cashback_records['prev_balance'].fillna(0)
-
-        # Negative balance change = redemption
-        cashback_records['redeemed_cents'] = cashback_records['balance_change'].apply(lambda x: abs(x) if x < 0 else 0)
+        # balance_cents = cashback SPENT on this order
+        cashback_records['redeemed_cents'] = cashback_records['balance_cents']
         cashback_records['redeemed_dkk'] = cashback_records['redeemed_cents'] / 100
 
         print(f"Cashback records: {len(cashback_records):,}")
-        print(f"Records with redemption: {(cashback_records['redeemed_cents'] > 0).sum():,}")
+        print(f"Records with cashback spent: {(cashback_records['redeemed_cents'] > 0).sum():,}")
 
     return cashback_records
 
