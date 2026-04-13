@@ -163,7 +163,7 @@ export function FurtherInvestigationsTab() {
               <li>• Club AOV higher than non-Club</li>
               <li>• Club loyalty rate higher</li>
               <li>• Club profit per order higher</li>
-              <li>• Total cashback cost: ~6.9M DKK</li>
+              <li>• Total cashback cost: ~2.7M DKK</li>
               <li>• Program currently not profitable</li>
             </ul>
           </CardContent>

@@ -80,10 +80,10 @@ export const CORE_METRICS = {
   },
   cashback: {
     totalRecords: 71441,
-    recordsWithCashback: 26587,
-    recordsWithCashbackPercent: 37.1,
-    totalCashbackAmount: 3605323,
-    avgCashbackPerRecord: 86,
+    recordsWithCashback: 27689,  // Orders with cashback spent
+    recordsWithCashbackPercent: 36.8,
+    totalCashbackAmount: 2686276,  // CORRECTED: balance_cents = cashback spent per order
+    avgCashbackPerRecord: 97,  // 2686276 / 27689
     engagementRate: 34.6,
   },
   profit: {
@@ -113,9 +113,10 @@ export const CORE_METRICS = {
     // - Orders WITHOUT cashback: 250.84 DKK avg profit
     // - Difference at same AOV: ~17 DKK (close to 15 DKK cashback amount)
     // - Conclusion: Cashback reduces revenue → reduces profit → already counted
-    cashbackRedeemed: 3605323,  // For reference only - NOT a separate cost
-    cashbackOrderCount: 26587,
-    avgCashbackPerOrder: 86,
+    // CORRECTED: balance_cents in customer_cashback = cashback SPENT per order (not running balance)
+    cashbackRedeemed: 2686276,  // For reference only - NOT a separate cost
+    cashbackOrderCount: 27689,
+    avgCashbackPerOrder: 97,
     cashbackAlreadyInProfit: true,
 
     // SHIPPING: ALSO already in profit (confirmed via analysis)
@@ -201,9 +202,9 @@ export const CORE_METRICS = {
   },
   // Monthly cost visibility
   monthlyCosts: {
-    monthlyMonths: 10, // Analysis period months
-    monthlyCashbackRedeemed: 360532, // ~3.6M / 10 months
-    monthlyShippingSubsidy: 81507,   // ~815K / 10 months
+    monthlyMonths: 11, // Analysis period months (Apr 2025 - Feb 2026)
+    monthlyCashbackRedeemed: 244207, // ~2.69M / 11 months
+    monthlyShippingSubsidy: 74097,   // ~815K / 11 months
     note: "Cashback is already reflected in profit figures. Shipping subsidy is the actual incremental cost.",
   },
   // Order History Longitudinal Analysis (Before/After Club)
@@ -356,9 +357,9 @@ export const CORE_METRICS = {
     {
       month: "2025-04",
       totalClubOrders: 3270,
-      cashbackOrderCount: 1146,
-      totalCashbackDKK: 345515,
-      avgCashbackDKK: 301,
+      cashbackOrderCount: 1147,  // Corrected
+      totalCashbackDKK: 162017,  // CORRECTED: balance_cents = cashback spent
+      avgCashbackDKK: 141,  // 162017 / 1147
       aovAllClub: 322,
       aovWithCB: 231,
       aovWithoutCB: 373,
@@ -372,8 +373,8 @@ export const CORE_METRICS = {
       month: "2025-05",
       totalClubOrders: 5639,
       cashbackOrderCount: 2270,
-      totalCashbackDKK: 674166,
-      avgCashbackDKK: 297,
+      totalCashbackDKK: 269128,  // CORRECTED
+      avgCashbackDKK: 119,  // 269128 / 2270
       aovAllClub: 341,
       aovWithCB: 266,
       aovWithoutCB: 387,
@@ -387,8 +388,8 @@ export const CORE_METRICS = {
       month: "2025-06",
       totalClubOrders: 5811,
       cashbackOrderCount: 2177,
-      totalCashbackDKK: 602227,
-      avgCashbackDKK: 277,
+      totalCashbackDKK: 223886,  // CORRECTED
+      avgCashbackDKK: 103,  // 223886 / 2177
       aovAllClub: 326,
       aovWithCB: 263,
       aovWithoutCB: 367,
@@ -402,8 +403,8 @@ export const CORE_METRICS = {
       month: "2025-07",
       totalClubOrders: 4981,
       cashbackOrderCount: 1850,
-      totalCashbackDKK: 334012,
-      avgCashbackDKK: 181,
+      totalCashbackDKK: 181597,  // CORRECTED
+      avgCashbackDKK: 98,  // 181597 / 1850
       aovAllClub: 340,
       aovWithCB: 261,
       aovWithoutCB: 387,
@@ -417,8 +418,8 @@ export const CORE_METRICS = {
       month: "2025-08",
       totalClubOrders: 6566,
       cashbackOrderCount: 2195,
-      totalCashbackDKK: 533830,
-      avgCashbackDKK: 243,
+      totalCashbackDKK: 211887,  // CORRECTED
+      avgCashbackDKK: 97,  // 211887 / 2195
       aovAllClub: 350,
       aovWithCB: 263,
       aovWithoutCB: 398,
@@ -432,8 +433,8 @@ export const CORE_METRICS = {
       month: "2025-09",
       totalClubOrders: 6411,
       cashbackOrderCount: 2280,
-      totalCashbackDKK: 594593,
-      avgCashbackDKK: 261,
+      totalCashbackDKK: 203723,  // CORRECTED
+      avgCashbackDKK: 89,  // 203723 / 2280
       aovAllClub: 336,
       aovWithCB: 265,
       aovWithoutCB: 385,
@@ -447,8 +448,8 @@ export const CORE_METRICS = {
       month: "2025-10",
       totalClubOrders: 6427,
       cashbackOrderCount: 2343,
-      totalCashbackDKK: 574168,
-      avgCashbackDKK: 245,
+      totalCashbackDKK: 218818,  // CORRECTED
+      avgCashbackDKK: 93,  // 218818 / 2343
       aovAllClub: 336,
       aovWithCB: 250,
       aovWithoutCB: 389,
@@ -462,8 +463,8 @@ export const CORE_METRICS = {
       month: "2025-11",
       totalClubOrders: 13581,
       cashbackOrderCount: 4783,
-      totalCashbackDKK: 1139471,
-      avgCashbackDKK: 238,
+      totalCashbackDKK: 436266,  // CORRECTED
+      avgCashbackDKK: 91,  // 436266 / 4783
       aovAllClub: 328,
       aovWithCB: 265,
       aovWithoutCB: 365,
@@ -477,8 +478,8 @@ export const CORE_METRICS = {
       month: "2025-12",
       totalClubOrders: 14284,
       cashbackOrderCount: 4092,
-      totalCashbackDKK: 890584,
-      avgCashbackDKK: 218,
+      totalCashbackDKK: 362627,  // CORRECTED
+      avgCashbackDKK: 89,  // 362627 / 4092
       aovAllClub: 335,
       aovWithCB: 258,
       aovWithoutCB: 365,
@@ -492,8 +493,8 @@ export const CORE_METRICS = {
       month: "2026-01",
       totalClubOrders: 8287,
       cashbackOrderCount: 3362,
-      totalCashbackDKK: 904427,
-      avgCashbackDKK: 269,
+      totalCashbackDKK: 315027,  // CORRECTED
+      avgCashbackDKK: 94,  // 315027 / 3362
       aovAllClub: 333,
       aovWithCB: 266,
       aovWithoutCB: 373,
@@ -507,8 +508,8 @@ export const CORE_METRICS = {
       month: "2026-02",
       totalClubOrders: 3042,
       cashbackOrderCount: 1190,
-      totalCashbackDKK: 347397,
-      avgCashbackDKK: 292,
+      totalCashbackDKK: 101300,  // CORRECTED
+      avgCashbackDKK: 85,  // 101300 / 1190
       aovAllClub: 302,
       aovWithCB: 239,
       aovWithoutCB: 343,

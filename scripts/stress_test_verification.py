@@ -71,9 +71,10 @@ EXPECTED = {
         "lost_profit_per_month": 56933,
     },
     "costs": {
-        "cashback_redeemed": 3605323,
-        "cashback_orders": 26587,
-        "avg_cashback_per_order": 86,
+        # CORRECTED: balance_cents = cashback SPENT per order (not running balance)
+        "cashback_redeemed": 2686276,
+        "cashback_orders": 27689,
+        "avg_cashback_per_order": 97,
         "shipping_subsidy": 815070,
         "shipping_subsidy_orders": 27169,
     },
