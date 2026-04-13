@@ -55,11 +55,13 @@ export const CORE_METRICS = {
     clubPercentage: 11.1,
     neverClub: 465265,
     neverClubPercentage: 88.9,
-    customersWithCashback: 20052,
+    customersWithCashback: 20830,  // Customers who have SPENT cashback (at least once)
   },
   cashbackSegments: {
-    hasBalance: { count: 20052, percentage: 34.6 },
-    zeroBalance: { count: 37916, percentage: 65.4 },
+    // CORRECTED: "hasBalance" is misleading - balance_cents = cashback SPENT, not balance
+    // This is: customers who have used/redeemed cashback on at least one order
+    hasBalance: { count: 20830, percentage: 34.8 },  // 20830 / 59945
+    zeroBalance: { count: 39115, percentage: 65.2 }, // Never used cashback
   },
   aov: {
     // USING MEDIAN for robustness (mean is skewed by high-value outliers)
@@ -1046,18 +1048,18 @@ export function DataSourceTab() {
             </TableHeader>
             <TableBody>
               <TableRow className="bg-green-50/50 dark:bg-green-950/20">
-                <TableCell className="font-medium text-green-700 dark:text-green-400">🟢 Has Cashback Balance &gt; 0</TableCell>
+                <TableCell className="font-medium text-green-700 dark:text-green-400">🟢 Has Used Cashback</TableCell>
                 <TableCell className="text-right font-bold text-green-600">{formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)}</TableCell>
                 <TableCell className="text-right font-bold text-green-600">{CORE_METRICS.cashbackSegments.hasBalance.percentage}%</TableCell>
-                <TableCell className="text-green-600 text-sm">Club customers with positive cashback balance in file</TableCell>
-                <TableCell className="text-sm text-green-600">cashback WHERE amount &gt; 0</TableCell>
+                <TableCell className="text-green-600 text-sm">Redeemed cashback on at least one order</TableCell>
+                <TableCell className="text-sm text-green-600">customer_cashback WHERE balance_cents &gt; 0</TableCell>
               </TableRow>
               <TableRow className="bg-yellow-50/50 dark:bg-yellow-950/20">
-                <TableCell className="font-medium text-yellow-700 dark:text-yellow-400">🟡 Zero Balance</TableCell>
+                <TableCell className="font-medium text-yellow-700 dark:text-yellow-400">🟡 Never Used Cashback</TableCell>
                 <TableCell className="text-right font-bold text-yellow-600">{formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)}</TableCell>
                 <TableCell className="text-right font-bold text-yellow-600">{CORE_METRICS.cashbackSegments.zeroBalance.percentage}%</TableCell>
-                <TableCell className="text-yellow-600 text-sm">In cashback file but amount = 0 (may be redeemed OR never earned)</TableCell>
-                <TableCell className="text-sm text-yellow-600">cashback WHERE amount = 0</TableCell>
+                <TableCell className="text-yellow-600 text-sm">No cashback redemption recorded</TableCell>
+                <TableCell className="text-sm text-yellow-600">customer_cashback WHERE balance_cents = 0</TableCell>
               </TableRow>
               <TableRow className="bg-muted/50">
                 <TableCell className="font-medium">TOTAL Club Members</TableCell>
@@ -1087,8 +1089,8 @@ export function DataSourceTab() {
               </div>
             </div>
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-              <span>🟢 Has Balance ({formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)})</span>
-              <span>🟡 Zero Balance ({formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)})</span>
+              <span>🟢 Used CB ({formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)})</span>
+              <span>🟡 Never Used ({formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)})</span>
             </div>
           </div>
 

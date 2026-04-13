@@ -639,7 +639,7 @@ export function ExecutiveSummaryTab() {
                     <span className="font-mono">{formatNumber(CORE_METRICS.costs.cashbackOrderCount)} ({((CORE_METRICS.costs.cashbackOrderCount / CORE_METRICS.orders.club) * 100).toFixed(0)}%)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Members with balance:</span>
+                    <span className="text-muted-foreground">Members who used CB:</span>
                     <span className="font-mono">{formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)} ({CORE_METRICS.cashbackSegments.hasBalance.percentage}%)</span>
                   </div>
                 </div>
@@ -1939,7 +1939,7 @@ export function ExecutiveSummaryTab() {
                   <tbody>
                     <tr><td className="p-2 border-b">Total Unique</td><td className="p-2 border-b text-right font-mono">{formatNumber(CORE_METRICS.customers.totalUnique)}</td></tr>
                     <tr className="bg-green-50/50 dark:bg-green-950/20"><td className="p-2 border-b text-green-700">Club Members</td><td className="p-2 border-b text-right font-mono text-green-700">{formatNumber(CORE_METRICS.customers.totalClub)} ({CORE_METRICS.customers.clubPercentage}%)</td></tr>
-                    <tr className="bg-amber-50/50 dark:bg-amber-950/20"><td className="p-2 border-b text-amber-700 dark:text-amber-400 pl-4">↳ Engaged (CB balance &gt; 0)</td><td className="p-2 border-b text-right font-mono text-amber-700 dark:text-amber-400">{formatNumber(CORE_METRICS.customers.customersWithCashback)} ({((CORE_METRICS.customers.customersWithCashback / CORE_METRICS.customers.totalClub) * 100).toFixed(1)}%)</td></tr>
+                    <tr className="bg-amber-50/50 dark:bg-amber-950/20"><td className="p-2 border-b text-amber-700 dark:text-amber-400 pl-4">↳ Used Cashback</td><td className="p-2 border-b text-right font-mono text-amber-700 dark:text-amber-400">{formatNumber(CORE_METRICS.customers.customersWithCashback)} ({((CORE_METRICS.customers.customersWithCashback / CORE_METRICS.customers.totalClub) * 100).toFixed(1)}%)</td></tr>
                     <tr><td className="p-2 border-b">Never-Club</td><td className="p-2 border-b text-right font-mono">{formatNumber(CORE_METRICS.customers.neverClub)} ({CORE_METRICS.customers.neverClubPercentage}%)</td></tr>
                   </tbody>
                 </table>
@@ -2053,16 +2053,16 @@ export function ExecutiveSummaryTab() {
                 </thead>
                 <tbody>
                   <tr className="bg-green-50/50 dark:bg-green-950/20">
-                    <td className="p-2 border-b font-medium text-green-700">Has Cashback Balance &gt; 0</td>
+                    <td className="p-2 border-b font-medium text-green-700">Has Used Cashback</td>
                     <td className="p-2 border-b text-right font-mono text-green-700">{formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)}</td>
                     <td className="p-2 border-b text-right font-mono text-green-700">{CORE_METRICS.cashbackSegments.hasBalance.percentage}%</td>
-                    <td className="p-2 border-b text-xs text-green-600">Actively engaged - has earned cashback</td>
+                    <td className="p-2 border-b text-xs text-green-600">Redeemed cashback on at least one order</td>
                   </tr>
                   <tr className="bg-amber-50/50 dark:bg-amber-950/20">
-                    <td className="p-2 border-b font-medium text-amber-700">Zero Balance</td>
+                    <td className="p-2 border-b font-medium text-amber-700">Never Used Cashback</td>
                     <td className="p-2 border-b text-right font-mono text-amber-700">{formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)}</td>
                     <td className="p-2 border-b text-right font-mono text-amber-700">{CORE_METRICS.cashbackSegments.zeroBalance.percentage}%</td>
-                    <td className="p-2 border-b text-xs text-amber-600">Redeemed OR never earned (ambiguous)</td>
+                    <td className="p-2 border-b text-xs text-amber-600">No cashback redemption recorded</td>
                   </tr>
                   <tr>
                     <td className="p-2 font-medium">Total Club Members</td>
@@ -2180,8 +2180,8 @@ export function ExecutiveSummaryTab() {
               <h4 className="font-bold text-amber-700">Increase Cashback Engagement (currently {CORE_METRICS.cashbackSegments.hasBalance.percentage}%)</h4>
             </div>
             <p className="text-sm text-amber-700 mb-3">
-              Only {formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)} of {formatNumber(PROGRAM.totalClubMembers)} members have earned any cashback.
-              {formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)} members ({CORE_METRICS.cashbackSegments.zeroBalance.percentage}%) have zero balance.
+              Only {formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)} of {formatNumber(PROGRAM.totalClubMembers)} members have used cashback.
+              {formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)} members ({CORE_METRICS.cashbackSegments.zeroBalance.percentage}%) never redeemed any.
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
