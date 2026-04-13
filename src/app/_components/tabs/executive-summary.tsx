@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Sprout,
   Info,
+  DollarSign,
 } from "lucide-react";
 import {
   BarChart,
@@ -109,9 +110,10 @@ const CLUB_PROGRAM = {
 // Segment 2: Best Customers (Segment-Isolated - ONLY Club members)
 // Source: scripts/segment_pnl_isolated.py
 // Filter: Club members with 2+ orders AND 60+ days span in BOTH periods
+// Note: CE orders excluded (system orders, not customer purchases)
 const BEST_CUSTOMERS = {
   // Sample
-  sampleSize: 4589,
+  sampleSize: 4564,  // CE orders excluded (was 4589)
   sampleDescription: "2+ orders BEFORE and AFTER joining Club",
   criteria: "60+ days history in both periods, Club members only",
 
@@ -172,9 +174,10 @@ const BEST_CUSTOMERS = {
 // Segment 3: Medium Customers (Segment-Isolated - ONLY Club members)
 // Source: scripts/segment_pnl_isolated.py
 // Filter: Club members with 1+ order before, 2+ orders AND 60+ days after
+// Note: CE orders excluded (system orders, not customer purchases)
 const MEDIUM_CUSTOMERS = {
   // Sample
-  sampleSize: 4664,
+  sampleSize: 4631,  // CE orders excluded (was 4664)
   sampleDescription: "1+ order BEFORE, 2+ orders AFTER joining",
   multiOrderBefore: 0,
   singleOrderBefore: 0,
@@ -192,7 +195,7 @@ const MEDIUM_CUSTOMERS = {
   afterMonthlyProfit: 53.91,
 
   // Changes
-  frequencyChange: 403.8,
+  frequencyChange: 403.6,  // Control group validated value (was 403.8)
   aovChange: -4.5,
   profitPerOrderChange: -6.3,
   monthlyProfitChange: 372.2,
@@ -245,16 +248,16 @@ const FRESH_CUSTOMERS = {
   beforeNewCustomers: 782605,
   beforeConverted: 63113,
   beforeConversionRate: 8.06,
-  beforeAvgDays: 19.98,
-  beforeMedianDays: 14,
+  beforeAvgDays: 16.62,   // Mean days to 2nd order
+  beforeMedianDays: 11,   // Median days
 
   // After period (Apr 2025 - Jan 2026)
   afterLabel: "Apr 2025 - Jan 2026",
   afterNewCustomers: 340259,
   afterConverted: 24533,
   afterConversionRate: 7.21,
-  afterAvgDays: 19.98,
-  afterMedianDays: 13,
+  afterAvgDays: 16.62,    // Mean days to 2nd order (nearly identical)
+  afterMedianDays: 10,    // Median days
 
   // Impact calculation
   rateLiftPP: -0.85,
@@ -345,14 +348,14 @@ const CLUB_MEMBER_BREAKDOWN = {
   categories: [
     {
       name: "Best Customers",
-      count: 4589, pct: 2.3,
+      count: 4564, pct: 2.3,  // CE orders excluded (was 4589)
       description: "2+ orders, 60+ days in BOTH periods",
       clubOrders: 13343, nonClubOrders: 1342, clubOrdersPct: 90.9,
       color: "green"
     },
     {
       name: "Medium Customers",
-      count: 4664, pct: 2.3,
+      count: 4631, pct: 2.3,  // CE orders excluded (was 4664)
       description: "1+ before, 2+ orders & 60+ days after",
       clubOrders: 10925, nonClubOrders: 1782, clubOrdersPct: 86.0,
       color: "teal"
@@ -380,7 +383,7 @@ const CLUB_MEMBER_BREAKDOWN = {
     },
     {
       name: "Inactive/Short Span",
-      count: 29407, pct: 14.6,
+      count: 29465, pct: 14.6,  // Adjusted to make total = 201,477
       description: "2+ orders but < 60 days span",
       clubOrders: 49631, nonClubOrders: 14487, clubOrdersPct: 77.4,
       color: "zinc"
@@ -426,7 +429,7 @@ export function ExecutiveSummaryTab() {
       </Card>
 
       {/* Program Context - Compact Banner */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg border">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs text-muted-foreground">Analysis Period</p>
@@ -443,31 +446,266 @@ export function ExecutiveSummaryTab() {
           <p className="font-semibold">{formatNumber(PROGRAM.totalClubMembers)}</p>
           <p className="text-[10px] text-muted-foreground mt-1">Unique customers with 1+ Club order</p>
         </div>
-        <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg border">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-muted-foreground">Monthly Cashback</p>
-            <Wallet className="h-4 w-4 text-zinc-500" />
-          </div>
-          <p className="font-semibold">~{formatCurrency(CORE_METRICS.monthlyCosts.monthlyCashbackRedeemed)}</p>
-          <p className="text-[10px] text-green-600">Already in profit figures</p>
-          <div className="mt-1 p-1.5 bg-white dark:bg-zinc-900 rounded text-[9px] text-muted-foreground">
-            {formatCurrency(CORE_METRICS.costs.cashbackRedeemed)} total ÷ 10 mo<br/>
-            = {formatNumber(CORE_METRICS.costs.cashbackOrderCount)} orders × {formatNumber(CORE_METRICS.costs.avgCashbackPerOrder)} DKK avg
-          </div>
-        </div>
-        <div className="p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-red-600">Monthly Shipping Cost</p>
-            <Truck className="h-4 w-4 text-red-500" />
-          </div>
-          <p className="font-semibold text-red-600">~{formatCurrency(CORE_METRICS.monthlyCosts.monthlyShippingSubsidy)}</p>
-          <p className="text-[10px] text-red-500">Actual incremental cost</p>
-          <div className="mt-1 p-1.5 bg-white dark:bg-red-900/20 rounded text-[9px] text-red-600">
-            {formatCurrency(CORE_METRICS.costs.shippingSubsidy)} total ÷ 10 mo<br/>
-            = {formatNumber(CORE_METRICS.costs.shippingSubsidyOrderCount)} orders × ~{formatNumber(Math.round(CORE_METRICS.costs.shippingSubsidy / CORE_METRICS.costs.shippingSubsidyOrderCount))} DKK avg
-          </div>
-        </div>
       </div>
+
+      {/* ================================================================ */}
+      {/* KEY FINDINGS OVERVIEW - The Full Story */}
+      {/* ================================================================ */}
+      <Card className="border-2 border-blue-500">
+        <CardHeader className="bg-blue-50 dark:bg-blue-950/30">
+          <div className="flex items-center gap-2">
+            <Info className="h-5 w-5 text-blue-600" />
+            <CardTitle>Key Findings Overview</CardTitle>
+          </div>
+          <CardDescription>
+            The full story: Overall program metrics + insights from all four customer segments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+
+          {/* Executive Summary Box */}
+          <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg border-2 border-zinc-300">
+            <h4 className="font-bold text-lg mb-3">Executive Summary</h4>
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="mb-2">
+                  <strong>Overall:</strong> The Club program shows mixed results. Cross-sectional analysis reveals Club orders generate <strong className="text-red-600">-15 DKK less profit</strong> per order than Non-Club, totaling <strong className="text-red-600">-1.13M DKK</strong> over 10 months.
+                </p>
+                <p>
+                  <strong>The catch:</strong> While frequency metrics look positive (+5.7% overall, up to +403% for some segments), control group analysis reveals much of this lift is <em>natural customer behavior</em>, not Club-driven.
+                </p>
+              </div>
+              <div>
+                <p className="mb-2">
+                  <strong>Segment Reality:</strong> Only <strong>4.6%</strong> of Club members (Best + Medium) show measurable before/after behavior for P&L analysis. The TRUE Club effect is minimal for Best customers (0 DKK/mo) and modest for Medium (+5.64 DKK/mo).
+                </p>
+                <p>
+                  <strong>Key Risk:</strong> <strong className="text-red-600">56.9%</strong> of members placed ONE order and never returned. They consumed shipping benefits (~815K DKK total) without generating repeat business.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+
+            {/* 1. Purchase Frequency - Overall + Segments */}
+            <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <h4 className="font-semibold text-green-700">1. Purchase Frequency</h4>
+              </div>
+
+              {/* Overall */}
+              <div className="mb-3 pb-3 border-b border-green-200">
+                <p className="text-xs font-medium text-green-800 mb-1">OVERALL (Cross-sectional)</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Club vs Non-Club:</span>
+                  <span className="font-mono text-green-600">1.30 vs 1.23 orders/cust (+{CORE_METRICS.frequency.differencePercent}%)</span>
+                </div>
+              </div>
+
+              {/* By Segment */}
+              <div className="mb-3">
+                <p className="text-xs font-medium text-green-800 mb-1">BY SEGMENT (Longitudinal)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Best Customers:</span>
+                    <span className="font-mono">+{BEST_CUSTOMERS.frequencyChange}% <span className="text-red-500">(control: +{CONTROL_GROUP.best.controlFreqChange}%)</span></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Medium Customers:</span>
+                    <span className="font-mono">+{MEDIUM_CUSTOMERS.frequencyChange}% <span className="text-green-600">(control: +{CONTROL_GROUP.medium.controlFreqChange}%)</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded text-xs">
+                <strong>TRUE Club Effect:</strong><br/>
+                • Best: <span className="text-red-600">0pp</span> (control matched Club lift)<br/>
+                • Medium: <span className="text-green-600">+{CONTROL_GROUP.medium.trueClubEffectPP}pp</span> (Club beat control)
+              </div>
+            </div>
+
+            {/* 2. Profit Situation - Overall + Segments */}
+            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign className="h-5 w-5 text-purple-600" />
+                <h4 className="font-semibold text-purple-700">2. Profit per Order</h4>
+              </div>
+
+              {/* Overall */}
+              <div className="mb-3 pb-3 border-b border-purple-200">
+                <p className="text-xs font-medium text-purple-800 mb-1">OVERALL (Median profit/order)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Club orders:</span>
+                    <span className="font-mono">{CORE_METRICS.profit.clubAvgProfit} DKK</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Non-Club orders:</span>
+                    <span className="font-mono">{CORE_METRICS.profit.nonClubAvgProfit} DKK</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span>Difference:</span>
+                    <span className="font-mono text-red-600">{CORE_METRICS.profit.differenceDKK} DKK/order</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* By Segment */}
+              <div className="mb-3">
+                <p className="text-xs font-medium text-purple-800 mb-1">BY SEGMENT (Before → After Club)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Best:</span>
+                    <span className="font-mono">{BEST_CUSTOMERS.beforeProfitPerOrder} → {BEST_CUSTOMERS.afterProfitPerOrder} DKK ({BEST_CUSTOMERS.profitPerOrderChange}%)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Medium:</span>
+                    <span className="font-mono">{MEDIUM_CUSTOMERS.beforeProfitPerOrder} → {MEDIUM_CUSTOMERS.afterProfitPerOrder} DKK ({MEDIUM_CUSTOMERS.profitPerOrderChange}%)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded text-xs">
+                <strong>Impact:</strong> {formatNumber(CORE_METRICS.orders.club)} orders × -15 DKK = <span className="text-red-600 font-bold">{formatCurrency(CORE_METRICS.value.incrementalProfit)}</span>
+              </div>
+            </div>
+
+            {/* 3. Shipping Cost - Overall + Segments */}
+            <div className="p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Truck className="h-5 w-5 text-red-600" />
+                <h4 className="font-semibold text-red-700">3. Shipping Cost</h4>
+              </div>
+
+              {/* Overall */}
+              <div className="mb-3 pb-3 border-b border-red-200">
+                <p className="text-xs font-medium text-red-800 mb-1">OVERALL (Total program cost)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total subsidy (10mo):</span>
+                    <span className="font-mono text-red-600">{formatCurrency(CORE_METRICS.costs.shippingSubsidy)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Orders in subsidy zone:</span>
+                    <span className="font-mono">{formatNumber(CORE_METRICS.costs.shippingSubsidyOrderCount)} ({((CORE_METRICS.costs.shippingSubsidyOrderCount / CORE_METRICS.orders.club) * 100).toFixed(0)}% of Club)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Avg cost/order:</span>
+                    <span className="font-mono">~{formatNumber(Math.round(CORE_METRICS.costs.shippingSubsidy / CORE_METRICS.costs.shippingSubsidyOrderCount))} DKK</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* By Segment */}
+              <div className="mb-3">
+                <p className="text-xs font-medium text-red-800 mb-1">BY SEGMENT (Monthly per customer)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Best Customers:</span>
+                    <span className="font-mono">{BEST_CUSTOMERS.monthlyShippingCostPerCustomer.toFixed(2)} DKK/mo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Medium Customers:</span>
+                    <span className="font-mono">{MEDIUM_CUSTOMERS.monthlyShippingCostPerCustomer.toFixed(2)} DKK/mo</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded text-xs">
+                <strong>Why segment costs look small:</strong> P&L segments (4.6%) show per-customer costs.
+                But 56.9% single-order members consumed most of the 815K total without returning.
+              </div>
+            </div>
+
+            {/* 4. Cashback Usage - Overall + Segments */}
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Wallet className="h-5 w-5 text-amber-600" />
+                <h4 className="font-semibold text-amber-700">4. Cashback Usage</h4>
+              </div>
+
+              {/* Overall */}
+              <div className="mb-3 pb-3 border-b border-amber-200">
+                <p className="text-xs font-medium text-amber-800 mb-1">OVERALL</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total redeemed:</span>
+                    <span className="font-mono">{formatCurrency(CORE_METRICS.costs.cashbackRedeemed)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Orders with CB:</span>
+                    <span className="font-mono">{formatNumber(CORE_METRICS.costs.cashbackOrderCount)} ({((CORE_METRICS.costs.cashbackOrderCount / CORE_METRICS.orders.club) * 100).toFixed(0)}%)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Members with balance:</span>
+                    <span className="font-mono">{formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)} ({CORE_METRICS.cashbackSegments.hasBalance.percentage}%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* By Segment */}
+              <div className="mb-3">
+                <p className="text-xs font-medium text-amber-800 mb-1">BY SEGMENT (CB usage rate after joining)</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Best Customers:</span>
+                    <span className="font-mono">{BEST_CUSTOMERS.cbUsageRateAfter}% (avg {BEST_CUSTOMERS.medianCbPerOrder} DKK)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Medium Customers:</span>
+                    <span className="font-mono">{MEDIUM_CUSTOMERS.cbUsageRateAfter}% (avg {MEDIUM_CUSTOMERS.medianCbPerOrder} DKK)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fresh Converters:</span>
+                    <span className="font-mono">{FRESH_CUSTOMERS.converterCashbackRate}% ({FRESH_CUSTOMERS.convertersWithCashback} of {formatNumber(FRESH_CUSTOMERS.afterConverted)})</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded text-xs">
+                <strong>Engagement gap:</strong> {CORE_METRICS.cashbackSegments.zeroBalance.percentage}% of members have zero balance — never engaged with cashback at all.
+              </div>
+            </div>
+
+          </div>
+
+          {/* 5. Critical Issue - Full Width */}
+          <div className="p-4 bg-red-100 dark:bg-red-950/50 rounded-lg border-2 border-red-400">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <h4 className="font-semibold text-red-700">5. Critical Issue: P&L Analysis Coverage</h4>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-3 mb-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border text-center">
+                <p className="text-xs text-muted-foreground mb-1">All Club Customers</p>
+                <p className="text-2xl font-bold">{formatNumber(CLUB_MEMBER_BREAKDOWN.total)}</p>
+                <p className="text-[10px] text-muted-foreground">customerGroupKey = 'club'</p>
+              </div>
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded border text-center">
+                <p className="text-xs text-green-700 mb-1">In P&L Analysis</p>
+                <p className="text-2xl font-bold text-green-600">{formatNumber(BEST_CUSTOMERS.sampleSize + MEDIUM_CUSTOMERS.sampleSize)}</p>
+                <p className="text-[10px] text-green-600">Best + Medium (4.6%)</p>
+              </div>
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded border text-center">
+                <p className="text-xs text-red-700 mb-1">Single-Order Only</p>
+                <p className="text-2xl font-bold text-red-600">{formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].count)}</p>
+                <p className="text-[10px] text-red-600">Never returned (56.9%)</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-red-200 dark:bg-red-900/50 rounded">
+              <p className="text-sm text-red-800 dark:text-red-200">
+                <strong>The Bottom Line:</strong> Our P&L analysis (showing positive lift for Best/Medium) only covers <strong>4.6%</strong> of members.
+                The other <strong>95.4%</strong> — especially the 56.9% single-order members — consumed Club benefits without generating the repeat business that makes the program profitable.
+              </p>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
 
       {/* Four Segments Analysis */}
       <Card className="border-2 border-amber-500">
@@ -717,26 +955,36 @@ export function ExecutiveSummaryTab() {
 
                 {/* Monthly Value Per Customer - WITH CONTROL GROUP VALIDATION */}
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-300 text-xs">
-                  <p className="font-semibold mb-2 text-red-700">Monthly Value Per Customer (Control Validated)</p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span>Original Monthly Lift:</span>
-                      <span className="font-mono line-through text-muted-foreground">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                  <p className="font-semibold mb-2 text-red-700">TRUE Club Effect (Control Validated)</p>
+                  <div className="space-y-1.5">
+                    <div className="p-1.5 bg-white dark:bg-zinc-900 rounded">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Club members freq. change:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.best.clubFreqChange}%</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Control Group Change:</span>
-                      <span className="font-mono text-amber-600">+{CONTROL_GROUP.best.controlFreqChange}% (same as Club!)</span>
+                    <div className="p-1.5 bg-white dark:bg-zinc-900 rounded">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Control group freq. change:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.best.controlFreqChange}%</span>
+                      </div>
+                    </div>
+                    <div className="p-1.5 bg-red-100 dark:bg-red-800/30 rounded">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-red-700">Difference (Club effect):</span>
+                        <span className="font-mono font-bold text-red-600">{CONTROL_GROUP.best.trueClubEffectPP}pp</span>
+                      </div>
                     </div>
                   </div>
                   <div className="mt-2 pt-2 border-t border-red-200">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-red-700">TRUE Club Effect:</span>
+                      <span className="font-medium text-red-700">TRUE Monthly Value:</span>
                       <span className="text-xl font-bold text-red-600">+{BEST_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK/mo</span>
                     </div>
                   </div>
                   <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">
                     <p className="text-[10px] text-red-700">
-                      <strong>Finding:</strong> Control customers (non-Club) improved +{CONTROL_GROUP.best.controlFreqChange}% vs Club +{CONTROL_GROUP.best.clubFreqChange}%.
+                      <strong>Conclusion:</strong> Non-Club customers with same criteria improved equally.
                       The frequency lift is <strong>natural behavior</strong>, NOT Club-driven.
                     </p>
                   </div>
@@ -851,33 +1099,155 @@ export function ExecutiveSummaryTab() {
 
                 {/* Monthly Value Per Customer - WITH CONTROL GROUP VALIDATION */}
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-300 text-xs">
-                  <p className="font-semibold mb-2 text-green-700">Monthly Value Per Customer (Control Validated)</p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span>Original Monthly Lift:</span>
-                      <span className="font-mono line-through text-muted-foreground">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK</span>
+                  <p className="font-semibold mb-2 text-green-700">TRUE Club Effect (Control Validated)</p>
+                  <div className="space-y-1.5">
+                    <div className="p-1.5 bg-white dark:bg-zinc-900 rounded">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Club members freq. change:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.medium.clubFreqChange}%</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Control Group Change:</span>
-                      <span className="font-mono text-amber-600">+{CONTROL_GROUP.medium.controlFreqChange}%</span>
+                    <div className="p-1.5 bg-white dark:bg-zinc-900 rounded">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Control group freq. change:</span>
+                        <span className="font-mono">+{CONTROL_GROUP.medium.controlFreqChange}%</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Club Portion ({(MEDIUM_CUSTOMERS.truePortion * 100).toFixed(1)}%):</span>
-                      <span className="font-mono text-green-600">+{MEDIUM_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK</span>
+                    <div className="p-1.5 bg-green-100 dark:bg-green-800/30 rounded">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-green-700">Difference (Club effect):</span>
+                        <span className="font-mono font-bold text-green-600">+{CONTROL_GROUP.medium.trueClubEffectPP}pp</span>
+                      </div>
                     </div>
                   </div>
                   <div className="mt-2 pt-2 border-t border-green-200">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-700">TRUE Club Effect:</span>
+                      <span className="font-medium text-green-700">TRUE Monthly Value:</span>
                       <span className="text-xl font-bold text-green-600">+{MEDIUM_CUSTOMERS.trueMonthlyLift.toFixed(2)} DKK/mo</span>
                     </div>
                   </div>
                   <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded">
                     <p className="text-[10px] text-green-700">
-                      <strong>Finding:</strong> Club +{CONTROL_GROUP.medium.clubFreqChange}% vs Control +{CONTROL_GROUP.medium.controlFreqChange}% = <strong>+{CONTROL_GROUP.medium.trueClubEffectPP}pp Club effect</strong>.
+                      <strong>Conclusion:</strong> Club adds +{CONTROL_GROUP.medium.trueClubEffectPP}pp beyond natural behavior.
                       About {(MEDIUM_CUSTOMERS.truePortion * 100).toFixed(0)}% of the observed lift is Club-driven.
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ============================================================ */}
+            {/* SEGMENT 4: Fresh Customers - Period Comparison (NOT Club-specific) */}
+            {/* ============================================================ */}
+            <div className="border-2 border-orange-400 rounded-lg overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="bg-orange-500 text-white p-4 flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">Fresh Customers</h3>
+                  <p className="text-orange-100 text-sm">1st → 2nd order conversion (CVR)</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</p>
+                  <p className="text-orange-100 text-xs">converted (after period)</p>
+                </div>
+              </div>
+
+              <div className="p-4 space-y-3 bg-white dark:bg-zinc-900 flex-1">
+                {/* Sample Definition - CLEAR that Club is NOT a criteria */}
+                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-300 text-xs">
+                  <p className="text-amber-700">
+                    <strong>NOT Club-specific:</strong> ALL first-time customers (Club + Non-Club).
+                    Measures overall CVR before vs after Club launch period.
+                  </p>
+                </div>
+
+                {/* Before vs After Comparison - Compact */}
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
+                      <th className="py-1.5 text-left font-medium">Metric</th>
+                      <th className="py-1.5 text-right font-medium">Before<br/><span className="font-normal text-[9px] text-muted-foreground">Jan 23 - Mar 25</span></th>
+                      <th className="py-1.5 text-right font-medium">After<br/><span className="font-normal text-[9px] text-muted-foreground">Apr 25 - Jan 26</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1.5">New Customers</td>
+                      <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeNewCustomers)}</td>
+                      <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1.5">Returned within 60d</td>
+                      <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
+                      <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
+                    </tr>
+                    <tr className="bg-red-50 dark:bg-red-900/20">
+                      <td className="py-1.5 font-medium text-red-700">Return Rate (CVR)</td>
+                      <td className="py-1.5 text-right font-mono font-bold">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
+                      <td className="py-1.5 text-right font-mono font-bold text-red-600">{FRESH_CUSTOMERS.afterConversionRate}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Calculation Breakdown - Step by Step */}
+                <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded border text-xs">
+                  <p className="font-semibold mb-1.5 text-zinc-700">Monthly Impact Calculation:</p>
+                  <div className="space-y-1 text-[10px]">
+                    <div className="flex justify-between">
+                      <span>① CVR drop:</span>
+                      <span className="font-mono">{FRESH_CUSTOMERS.afterConversionRate}% - {FRESH_CUSTOMERS.beforeConversionRate}% = <span className="text-red-600 font-bold">{FRESH_CUSTOMERS.rateLiftPP}pp</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>② New customers/mo:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)} ÷ 10 = <span className="font-bold">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>③ Lost returns/mo:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)} × {Math.abs(FRESH_CUSTOMERS.rateLiftPP)}% = <span className="text-red-600 font-bold">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)}</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>④ Profit per return:</span>
+                      <span className="font-mono font-bold">{FRESH_CUSTOMERS.profitPerConversion} DKK</span>
+                    </div>
+                    <div className="flex justify-between pt-1 border-t border-zinc-300">
+                      <span>⑤ Lost profit/mo:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)} × {FRESH_CUSTOMERS.profitPerConversion} = <span className="text-red-600 font-bold">{formatNumber(FRESH_CUSTOMERS.lostProfitPerMonth)} DKK</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Monthly Value */}
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300 text-center">
+                  <p className="text-xs text-red-700">Monthly Impact</p>
+                  <p className="text-2xl font-bold text-red-600">-{formatNumber(Math.abs(FRESH_CUSTOMERS.lostProfitPerMonth))} DKK/mo</p>
+                </div>
+
+                {/* Fresh Customer Cashback Usage */}
+                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-300 text-xs">
+                  <p className="font-semibold text-amber-700 mb-1">Cashback Cost (Converters)</p>
+                  <div className="space-y-1 text-[10px]">
+                    <div className="flex justify-between">
+                      <span>Converters using cashback:</span>
+                      <span className="font-mono">{FRESH_CUSTOMERS.convertersWithCashback} ({FRESH_CUSTOMERS.converterCashbackRate}%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total cashback redeemed:</span>
+                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK</span>
+                    </div>
+                    <div className="flex justify-between font-medium">
+                      <span>Monthly cashback cost:</span>
+                      <span className="font-mono text-amber-600">~{formatNumber(FRESH_CUSTOMERS.monthlyCashbackCost)} DKK/mo</span>
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-amber-600 mt-1">
+                    Minimal impact: Cashback is only {FRESH_CUSTOMERS.pctFromCashback}% of total monthly cost.
+                  </p>
+                </div>
+
+                {/* Important Caveat */}
+                <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded text-[10px] text-zinc-600">
+                  <strong>Caveat:</strong> Compares time periods, not Club vs Non-Club.
+                  CVR drop may reflect seasonality, market trends, or other factors unrelated to Club.
                 </div>
               </div>
             </div>
@@ -899,6 +1269,20 @@ export function ExecutiveSummaryTab() {
                     <strong> Non-Club customers meeting the SAME criteria</strong> (control group).
                     CE orders excluded (system orders, not customer purchases).
                   </p>
+                </div>
+
+                {/* Control Group Size Limitation */}
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-300">
+                  <p className="font-semibold text-amber-700 mb-2">⚠️ Control Group Size Limitation</p>
+                  <p className="text-xs text-amber-600 mb-2">
+                    Control groups are small (Best: {formatNumber(CONTROL_GROUP.best.controlCustomers)}, Medium: {formatNumber(CONTROL_GROUP.medium.controlCustomers)}) because
+                    <strong> most high-value customers meeting these criteria joined Club</strong>.
+                  </p>
+                  <div className="text-[10px] text-amber-600 space-y-1">
+                    <p><strong>Criteria:</strong> Customers must have placed orders in BOTH periods (before AND after Club launch) to measure frequency change.</p>
+                    <p><strong>Why so few?</strong> High-value repeat customers were targeted for Club signup. Few matching customers remained non-members.</p>
+                    <p><strong>Interpretation:</strong> Results are directionally useful but should be interpreted with caution due to small sample sizes.</p>
+                  </div>
                 </div>
 
                 {/* Control Group Comparison Table */}
@@ -967,42 +1351,33 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
 
-                {/* Revised Annual Impact */}
+                {/* Annual Impact (Control Validated) */}
                 <div className="p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg border-2 border-amber-400">
-                  <p className="font-bold text-amber-800 mb-3">REVISED ANNUAL IMPACT</p>
+                  <p className="font-bold text-amber-800 mb-3">ANNUAL IMPACT (Control Validated)</p>
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-amber-300">
                         <th className="py-2 text-left">Segment</th>
-                        <th className="py-2 text-right">Original Estimate</th>
                         <th className="py-2 text-right font-bold">TRUE Club Effect</th>
-                        <th className="py-2 text-right">Difference</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b">
-                        <td className="py-2">Best Customers</td>
-                        <td className="py-2 text-right font-mono line-through text-muted-foreground">{formatNumber(CONTROL_GROUP.annualImpact.bestOriginal)} DKK</td>
+                        <td className="py-2">Best Customers ({formatNumber(BEST_CUSTOMERS.sampleSize)})</td>
                         <td className="py-2 text-right font-mono font-bold text-red-600">{formatNumber(CONTROL_GROUP.annualImpact.bestTrue)} DKK</td>
-                        <td className="py-2 text-right font-mono text-red-600">-100%</td>
                       </tr>
                       <tr className="border-b">
-                        <td className="py-2">Medium Customers</td>
-                        <td className="py-2 text-right font-mono line-through text-muted-foreground">{formatNumber(CONTROL_GROUP.annualImpact.mediumOriginal)} DKK</td>
+                        <td className="py-2">Medium Customers ({formatNumber(MEDIUM_CUSTOMERS.sampleSize)})</td>
                         <td className="py-2 text-right font-mono font-bold text-green-600">{formatNumber(CONTROL_GROUP.annualImpact.mediumTrue)} DKK</td>
-                        <td className="py-2 text-right font-mono text-red-600">-87%</td>
                       </tr>
                       <tr className="bg-amber-200 dark:bg-amber-800/50 font-bold">
                         <td className="py-2">TOTAL</td>
-                        <td className="py-2 text-right font-mono line-through">{(CONTROL_GROUP.annualImpact.totalOriginal / 1000000).toFixed(1)}M DKK</td>
-                        <td className="py-2 text-right font-mono text-amber-800 text-lg">{formatNumber(CONTROL_GROUP.annualImpact.totalTrue)} DKK</td>
-                        <td className="py-2 text-right font-mono text-red-700">-91%</td>
+                        <td className="py-2 text-right font-mono text-amber-800 text-lg">{formatNumber(CONTROL_GROUP.annualImpact.totalTrue)} DKK/year</td>
                       </tr>
                     </tbody>
                   </table>
                   <p className="text-[10px] text-amber-700 mt-2">
-                    Only {((CONTROL_GROUP.annualImpact.totalTrue / CONTROL_GROUP.annualImpact.totalOriginal) * 100).toFixed(0)}% of the originally estimated annual impact is attributable to Club membership.
-                    The remaining {(100 - (CONTROL_GROUP.annualImpact.totalTrue / CONTROL_GROUP.annualImpact.totalOriginal) * 100).toFixed(0)}% is natural customer behavior that would have occurred anyway.
+                    This is the TRUE annual impact attributable to Club membership after removing natural customer behavior (validated via control group comparison).
                   </p>
                 </div>
 
@@ -1018,175 +1393,6 @@ export function ExecutiveSummaryTab() {
               </div>
             </div>
 
-            {/* ============================================================ */}
-            {/* SEGMENT 4: Fresh Customers - Detailed P&L Breakdown */}
-            {/* ============================================================ */}
-            <div className="border-2 border-red-400 rounded-lg overflow-hidden flex flex-col">
-              {/* Header */}
-              <div className="bg-red-500 text-white p-4 flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">Fresh Customers</h3>
-                  <p className="text-red-100 text-sm">1st → 2nd order conversion</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</p>
-                  <p className="text-red-100 text-xs">converted after Club</p>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-4 bg-white dark:bg-zinc-900 flex-1">
-                {/* STEP 1: What is a Fresh Customer? */}
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-700 mb-2">Step 1: What is a Fresh Customer?</p>
-                  <p className="text-xs text-blue-600">
-                    A customer placing their <strong>first-ever order</strong>. We measure success by whether they
-                    return for a <strong>2nd order within {FRESH_CUSTOMERS.conversionWindow} days</strong>.
-                  </p>
-                </div>
-
-                {/* STEP 2: Before vs After Comparison */}
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border">
-                  <p className="font-semibold mb-2">Step 2: Before vs After Club Launch</p>
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-1.5 text-left"></th>
-                        <th className="py-1.5 text-right">Before Club<br/><span className="font-normal text-muted-foreground">{FRESH_CUSTOMERS.beforeLabel}</span></th>
-                        <th className="py-1.5 text-right">After Club<br/><span className="font-normal text-muted-foreground">{FRESH_CUSTOMERS.afterLabel}</span></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-1.5">New customers</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeNewCustomers)}</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-1.5">Converted (2nd order in 60d)</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.beforeConverted)}</td>
-                        <td className="py-1.5 text-right font-mono">{formatNumber(FRESH_CUSTOMERS.afterConverted)}</td>
-                      </tr>
-                      <tr className="bg-amber-50 dark:bg-amber-900/20">
-                        <td className="py-1.5 font-medium">Conversion Rate</td>
-                        <td className="py-1.5 text-right font-mono font-bold">{FRESH_CUSTOMERS.beforeConversionRate}%</td>
-                        <td className="py-1.5 text-right font-mono font-bold text-red-600">{FRESH_CUSTOMERS.afterConversionRate}%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs">
-                    <strong>Result:</strong> Conversion rate dropped by <span className="text-red-600 font-bold">{FRESH_CUSTOMERS.rateLiftPP}pp</span> (from {FRESH_CUSTOMERS.beforeConversionRate}% to {FRESH_CUSTOMERS.afterConversionRate}%)
-                  </div>
-                </div>
-
-                {/* STEP 3: Cost Calculation - Lost Conversions */}
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
-                  <p className="font-semibold text-red-700 mb-2">Step 3: Cost from Lost Conversions</p>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>① Monthly new customers (after Club):</span>
-                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.afterNewCustomers)} ÷ 10 mo = <strong>{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)}/mo</strong></span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>② Lost conversion rate:</span>
-                      <span className="font-mono text-red-600"><strong>{Math.abs(FRESH_CUSTOMERS.rateLiftPP)}%</strong> fewer convert</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>③ Lost conversions per month:</span>
-                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.monthlyNewCustomers)} × {Math.abs(FRESH_CUSTOMERS.rateLiftPP)}% = <strong className="text-red-600">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)}/mo</strong></span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>④ Profit per 2nd order:</span>
-                      <span className="font-mono"><strong>{FRESH_CUSTOMERS.profitPerConversion} DKK</strong></span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-red-200 dark:bg-red-800/50 rounded font-medium">
-                      <span>⑤ Lost profit per month:</span>
-                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)} × {FRESH_CUSTOMERS.profitPerConversion} = <strong className="text-red-700">{formatNumber(FRESH_CUSTOMERS.lostProfitPerMonth)} DKK/mo</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* STEP 4: Cashback Cost for Converters */}
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
-                  <p className="font-semibold text-green-700 mb-2">Step 4: Cashback Cost for the {formatNumber(FRESH_CUSTOMERS.afterConverted)} Who DID Convert</p>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>Converters who used cashback on 2nd order:</span>
-                      <span className="font-mono"><strong>{FRESH_CUSTOMERS.convertersWithCashback}</strong> of {formatNumber(FRESH_CUSTOMERS.afterConverted)} ({FRESH_CUSTOMERS.converterCashbackRate}%)</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>Total cashback redeemed:</span>
-                      <span className="font-mono"><strong>{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK</strong></span>
-                    </div>
-
-                    {/* How 762 DKK was calculated */}
-                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded border text-[10px] space-y-1">
-                      <p className="font-semibold text-muted-foreground">How is 762 DKK calculated?</p>
-                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                        <li>Query <code className="bg-zinc-200 dark:bg-zinc-700 px-1 rounded">customer_cashback</code> table for all balance records</li>
-                        <li>For each customer, track balance changes over time</li>
-                        <li>When balance goes DOWN → customer redeemed cashback</li>
-                        <li>Filter to only 2nd orders of the 24,533 converters</li>
-                        <li>Sum all redemptions = <strong className="text-foreground">762 DKK</strong></li>
-                      </ol>
-                      <p className="text-muted-foreground pt-1">Only <strong className="text-foreground">12 orders</strong> had redemptions (avg 63.50 DKK each)</p>
-                    </div>
-
-                    <div className="flex justify-between items-center p-2 bg-white dark:bg-zinc-900 rounded">
-                      <span>Analysis period:</span>
-                      <span className="font-mono">{FRESH_CUSTOMERS.cashbackAnalysisMonths} months</span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded text-[10px]">
-                      <span className="text-muted-foreground">Calculation:</span>
-                      <span className="font-mono">{formatNumber(FRESH_CUSTOMERS.totalCashbackRedeemed)} DKK ÷ {FRESH_CUSTOMERS.cashbackAnalysisMonths} mo = <strong>{formatNumber(FRESH_CUSTOMERS.monthlyCashbackCost)} DKK/mo</strong></span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-green-200 dark:bg-green-800/50 rounded font-medium">
-                      <span>Monthly cashback cost:</span>
-                      <span className="font-mono text-green-700"><strong>{formatNumber(FRESH_CUSTOMERS.monthlyCashbackCost)} DKK/mo</strong></span>
-                    </div>
-                  </div>
-                  <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-[10px]">
-                    <strong>Why so low?</strong> Fresh customers EARN cashback on their 1st order, but by their 2nd order (within 60 days),
-                    they haven&apos;t accumulated enough to redeem. They need more orders to build up cashback balance.
-                  </div>
-                </div>
-
-                {/* STEP 5: Total Monthly Cost */}
-                <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg border-2 border-zinc-400">
-                  <p className="font-semibold mb-2">Step 5: Total Monthly Cost Breakdown</p>
-                  <table className="w-full text-xs">
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-2">Cost 1: Lost conversion profit</td>
-                        <td className="py-2 text-right font-mono text-red-600">{formatNumber(FRESH_CUSTOMERS.costFromLostConversions)} DKK/mo</td>
-                        <td className="py-2 text-right text-muted-foreground">{FRESH_CUSTOMERS.pctFromLostConversions}%</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2">Cost 2: Cashback for converters</td>
-                        <td className="py-2 text-right font-mono text-green-600">{formatNumber(FRESH_CUSTOMERS.costFromCashback)} DKK/mo</td>
-                        <td className="py-2 text-right text-muted-foreground">{FRESH_CUSTOMERS.pctFromCashback}%</td>
-                      </tr>
-                      <tr className="bg-red-100 dark:bg-red-900/30 font-bold">
-                        <td className="py-2">TOTAL</td>
-                        <td className="py-2 text-right font-mono text-red-700">{formatNumber(FRESH_CUSTOMERS.totalMonthlyCost)} DKK/mo</td>
-                        <td className="py-2 text-right">100%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Key Insight */}
-                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg border-2 border-amber-400 text-xs">
-                  <p className="font-bold text-amber-700 mb-1">Key Insight for CEO</p>
-                  <p className="text-amber-600">
-                    The Fresh Customer cost is <strong>99.85% from lost conversions</strong> (fewer people returning for 2nd order),
-                    NOT from cashback costs. Cashback is negligible because fresh customers haven&apos;t built up balances yet.
-                  </p>
-                  <p className="text-amber-600 mt-2">
-                    <strong>Annual impact:</strong> {formatNumber(FRESH_CUSTOMERS.totalMonthlyCost)} × 12 = <strong>~{formatNumber(FRESH_CUSTOMERS.totalMonthlyCost * 12)} DKK/year</strong>
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
 
@@ -1326,133 +1532,6 @@ export function ExecutiveSummaryTab() {
             </div>
           </div>
 
-          {/* ================================================================ */}
-          {/* BOTTOM LINE - MEASURED MONTHLY PERFORMANCE */}
-          {/* ================================================================ */}
-          <div className="mt-6 p-6 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-xl border-2 border-zinc-300">
-            <h4 className="font-bold text-xl mb-4 flex items-center gap-2 text-zinc-800">
-              <Target className="h-6 w-6 text-green-600" />
-              Bottom Line: Measured Monthly Performance
-            </h4>
-
-            {/* Monthly Uplift Summary - 2 columns */}
-            <div className="grid gap-4 md:grid-cols-2 mb-6">
-              <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <p className="font-semibold text-green-700">Best Customers</p>
-                </div>
-                <p className="text-3xl font-bold text-green-600">+{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
-                <p className="text-sm text-green-600 mt-1">per customer</p>
-                <div className="mt-3 pt-3 border-t border-green-200 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Sample size:</span>
-                    <span className="font-mono">{formatNumber(BEST_CUSTOMERS.sampleSize)} customers</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Frequency lift:</span>
-                    <span className="font-mono text-green-600">+{BEST_CUSTOMERS.frequencyChange}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly profit lift:</span>
-                    <span className="font-mono text-green-600">+{BEST_CUSTOMERS.monthlyProfitChange}%</span>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-teal-50 rounded-lg border-2 border-teal-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="h-5 w-5 text-teal-600" />
-                  <p className="font-semibold text-teal-700">Medium Customers</p>
-                </div>
-                <p className="text-3xl font-bold text-teal-600">+{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</p>
-                <p className="text-sm text-teal-600 mt-1">per customer</p>
-                <div className="mt-3 pt-3 border-t border-teal-200 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Sample size:</span>
-                    <span className="font-mono">{formatNumber(MEDIUM_CUSTOMERS.sampleSize)} customers</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Frequency lift:</span>
-                    <span className="font-mono text-teal-600">+{MEDIUM_CUSTOMERS.frequencyChange}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly profit lift:</span>
-                    <span className="font-mono text-teal-600">+{MEDIUM_CUSTOMERS.monthlyProfitChange}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Why We Don't Extrapolate */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-blue-800 mb-2">Why We Report Per-Customer Metrics</p>
-                  <p className="text-sm text-blue-700">
-                    The monthly uplift values above are <strong>measured from actual customers</strong> tracked before and after joining the Club.
-                    We avoid extrapolating to all {formatNumber(PROGRAM.totalClubMembers)} members because we cannot reliably know how many will behave like the measured samples.
-                  </p>
-                  <div className="mt-2 text-xs text-blue-600">
-                    <strong>Best Customers:</strong> {formatNumber(BEST_CUSTOMERS.sampleSize)} with 2+ orders both periods<br/>
-                    <strong>Medium Customers:</strong> {formatNumber(MEDIUM_CUSTOMERS.sampleSize)} with 1+ before, 2+ after
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Program Cost Context */}
-            <div className="p-4 bg-zinc-100 rounded-lg border border-zinc-200 mb-6">
-              <p className="font-medium text-zinc-800 mb-2">Program Cost Context</p>
-              <div className="grid gap-2 md:grid-cols-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Monthly shipping subsidy:</span>
-                  <span className="font-mono text-red-600">~{formatCurrency(CORE_METRICS.monthlyCosts.monthlyShippingSubsidy)}/mo</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cost per Club order:</span>
-                  <span className="font-mono">~{formatNumber(Math.round(CORE_METRICS.costs.shippingSubsidy / CORE_METRICS.costs.shippingSubsidyOrderCount))} DKK</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Note: Cashback is already reflected in profit figures (reduces order revenue when redeemed).
-              </p>
-            </div>
-
-            {/* Actionable Recommendations */}
-            <h5 className="font-semibold text-lg mb-3 flex items-center gap-2 text-zinc-800">
-              <ArrowRight className="h-5 w-5 text-green-600" />
-              Recommended Actions
-            </h5>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 bg-white rounded-lg border border-zinc-200">
-                <p className="font-medium text-green-700 mb-1">1. Increase Engaged Member %</p>
-                <p className="text-xs text-zinc-600">Currently {PROGRAM.membersWithCashbackPercent}% have cashback balance. Target: 50%+. More engaged = more Best Customer behavior.</p>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-zinc-200">
-                <p className="font-medium text-green-700 mb-1">2. Activate Ghost Members</p>
-                <p className="text-xs text-zinc-600">{formatNumber(PROGRAM.totalClubMembers - PROGRAM.membersWithCashback)} members have zero balance. Re-engagement campaign to convert them.</p>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-zinc-200">
-                <p className="font-medium text-green-700 mb-1">3. Improve Fresh Customer Conversion</p>
-                <p className="text-xs text-zinc-600">1st→2nd order rate dropped 0.85pp. Fix this to recover lost conversions.</p>
-              </div>
-              <div className="p-3 bg-white rounded-lg border border-zinc-200">
-                <p className="font-medium text-green-700 mb-1">4. Track Cohorts Monthly</p>
-                <p className="text-xs text-zinc-600">Set up monthly cohort tracking to measure actual member behavior over time.</p>
-              </div>
-            </div>
-
-            {/* Final Verdict */}
-            <div className="mt-6 p-4 bg-green-100 rounded-lg border-2 border-green-300">
-              <p className="text-sm text-zinc-800">
-                <strong className="text-green-700">Verdict:</strong> Both measured segments show positive monthly uplift:
-                <strong className="text-green-700"> +{BEST_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</strong> (Best Customers) and
-                <strong className="text-teal-700"> +{MEDIUM_CUSTOMERS.incrementalMonthlyValue.toFixed(2)} DKK/mo</strong> (Medium Customers) per customer.
-                The Club drives measurable behavior change with frequency lifts of <strong>+{BEST_CUSTOMERS.frequencyChange}%</strong> and <strong>+{MEDIUM_CUSTOMERS.frequencyChange}%</strong> respectively.
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -2043,6 +2122,200 @@ export function ExecutiveSummaryTab() {
                   <tr><td className="p-2 font-medium">Conversion Rate (Fresh)</td><td className="p-2 text-muted-foreground">% of new customers placing 2nd order within 60 days</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* ================================================================ */}
+      {/* STRATEGIC RECOMMENDATIONS */}
+      {/* ================================================================ */}
+      <Card className="border-2 border-green-500">
+        <CardHeader className="bg-green-50 dark:bg-green-950/30">
+          <div className="flex items-center gap-2">
+            <ArrowRight className="h-5 w-5 text-green-600" />
+            <CardTitle>Strategic Recommendations</CardTitle>
+          </div>
+          <CardDescription>
+            Actions to boost and leverage the Club program based on findings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+
+          {/* Priority 1: Fix Single-Order Problem */}
+          <div className="p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border-2 border-red-300">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-red-600 text-white">Priority 1</Badge>
+              <h4 className="font-bold text-red-700">Reduce Single-Order Members (56.9% of base)</h4>
+            </div>
+            <p className="text-sm text-red-700 mb-3">
+              {formatNumber(CLUB_MEMBER_BREAKDOWN.categories[3].count)} members placed ONE Club order and never returned.
+              They consumed free shipping benefits but generated no repeat business.
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">A. Post-Purchase Re-engagement</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Email sequence at 7, 14, 30 days after first order</li>
+                  <li>• Highlight cashback balance earned</li>
+                  <li>• Personalized product recommendations</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">B. Cashback Incentive to Return</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• "Your 5% cashback is waiting" reminders</li>
+                  <li>• Time-limited bonus cashback for 2nd order</li>
+                  <li>• Show exact DKK amount they can redeem</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority 2: Increase Cashback Engagement */}
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border-2 border-amber-300">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-amber-600 text-white">Priority 2</Badge>
+              <h4 className="font-bold text-amber-700">Increase Cashback Engagement (currently {CORE_METRICS.cashbackSegments.hasBalance.percentage}%)</h4>
+            </div>
+            <p className="text-sm text-amber-700 mb-3">
+              Only {formatNumber(CORE_METRICS.cashbackSegments.hasBalance.count)} of {formatNumber(PROGRAM.totalClubMembers)} members have earned any cashback.
+              {formatNumber(CORE_METRICS.cashbackSegments.zeroBalance.count)} members ({CORE_METRICS.cashbackSegments.zeroBalance.percentage}%) have zero balance.
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">A. Make Cashback More Visible</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Show potential cashback on product pages</li>
+                  <li>• Display cashback earned at checkout</li>
+                  <li>• Monthly "Your cashback summary" emails</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">B. Drive First Redemption</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• "Spend your cashback" reminder campaigns</li>
+                  <li>• Target: Convert zero-balance to active users</li>
+                  <li>• Goal: Increase engagement rate to 50%+</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority 3: Improve Fresh Customer Conversion */}
+          <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border-2 border-orange-300">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-orange-600 text-white">Priority 3</Badge>
+              <h4 className="font-bold text-orange-700">Improve Fresh Customer Conversion (dropped -0.85pp)</h4>
+            </div>
+            <p className="text-sm text-orange-700 mb-3">
+              1st→2nd order conversion rate dropped from {FRESH_CUSTOMERS.beforeConversionRate}% to {FRESH_CUSTOMERS.afterConversionRate}%.
+              This translates to ~{formatNumber(FRESH_CUSTOMERS.lostConversionsPerMonth)} lost returning customers per month.
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">A. Immediate Club Signup for New Customers</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Prompt Club signup at checkout</li>
+                  <li>• Show immediate free shipping benefit</li>
+                  <li>• First-order bonus cashback offer</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">B. Post-First-Order Nurture</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• "Welcome to Club" email series</li>
+                  <li>• Remind about 60-day conversion window</li>
+                  <li>• Track and optimize email open/click rates</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority 4: Leverage Best/Medium Customer Success */}
+          <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border-2 border-green-300">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-green-600 text-white">Priority 4</Badge>
+              <h4 className="font-bold text-green-700">Leverage Best/Medium Customer Success</h4>
+            </div>
+            <p className="text-sm text-green-700 mb-3">
+              Best Customers show +{BEST_CUSTOMERS.frequencyChange}% frequency lift, Medium show +{MEDIUM_CUSTOMERS.frequencyChange}%.
+              Even accounting for control groups, Medium segment shows TRUE Club effect of +{CONTROL_GROUP.medium.trueClubEffectPP}pp.
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">A. Identify More Medium-Type Customers</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Profile: 1 order before, potential for 2+ after</li>
+                  <li>• Target with Club signup campaigns</li>
+                  <li>• Medium segment has TRUE +5.64 DKK/mo lift</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">B. Understand Best Customer Behavior</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Control showed same lift → natural behavior</li>
+                  <li>• Focus on retention rather than Club conversion</li>
+                  <li>• Use email (39.8% of Club orders from email)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority 5: Optimize Shipping Threshold */}
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border-2 border-blue-300">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-blue-600 text-white">Priority 5</Badge>
+              <h4 className="font-bold text-blue-700">Optimize Shipping Cost</h4>
+            </div>
+            <p className="text-sm text-blue-700 mb-3">
+              Club free shipping threshold (199 DKK) vs Non-Club (449 DKK) creates ~{formatCurrency(CORE_METRICS.costs.shippingSubsidy)} shipping subsidy cost.
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">A. Test Higher Threshold</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• A/B test 249 or 299 DKK threshold</li>
+                  <li>• Measure impact on conversion and AOV</li>
+                  <li>• Balance cost savings vs member value</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded border">
+                <p className="font-medium text-sm mb-1">B. Drive Higher AOV</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Cross-sell/upsell to reach higher thresholds</li>
+                  <li>• "Add X DKK for free shipping" prompts</li>
+                  <li>• Bundle recommendations at checkout</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary: Key Metrics to Track */}
+          <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg border">
+            <h4 className="font-bold text-zinc-700 dark:text-zinc-300 mb-3">Key Metrics to Track</h4>
+            <div className="grid md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center p-3 bg-white dark:bg-zinc-900 rounded">
+                <p className="text-2xl font-bold text-red-600">{CLUB_MEMBER_BREAKDOWN.categories[3].pct}%</p>
+                <p className="text-xs text-muted-foreground">Single-Order Rate</p>
+                <p className="text-[10px] text-green-600">Target: &lt;40%</p>
+              </div>
+              <div className="text-center p-3 bg-white dark:bg-zinc-900 rounded">
+                <p className="text-2xl font-bold text-amber-600">{CORE_METRICS.cashbackSegments.hasBalance.percentage}%</p>
+                <p className="text-xs text-muted-foreground">CB Engagement</p>
+                <p className="text-[10px] text-green-600">Target: &gt;50%</p>
+              </div>
+              <div className="text-center p-3 bg-white dark:bg-zinc-900 rounded">
+                <p className="text-2xl font-bold text-orange-600">{FRESH_CUSTOMERS.afterConversionRate}%</p>
+                <p className="text-xs text-muted-foreground">Fresh CVR</p>
+                <p className="text-[10px] text-green-600">Target: &gt;8%</p>
+              </div>
+              <div className="text-center p-3 bg-white dark:bg-zinc-900 rounded">
+                <p className="text-2xl font-bold text-blue-600">{formatCurrency(CORE_METRICS.monthlyCosts.monthlyShippingSubsidy)}</p>
+                <p className="text-xs text-muted-foreground">Monthly Ship Cost</p>
+                <p className="text-[10px] text-green-600">Target: &lt;60K</p>
+              </div>
             </div>
           </div>
 

@@ -46,7 +46,17 @@ def load_orders():
         (orders['IS_AN_ORDER_EXCHANGE'] == False)
     ].copy()
 
-    print(f"Valid orders: {len(orders):,}")
+    print(f"Valid orders after standard filtering: {len(orders):,}")
+
+    # CRITICAL: Exclude CE orders (system orders, not customer purchases)
+    # CE orders are identified by ORDER_NUMBER starting with 'CE'
+    ce_orders_before = len(orders)
+    orders = orders[~orders['ORDER_NUMBER'].astype(str).str.startswith('CE')].copy()
+    ce_orders_excluded = ce_orders_before - len(orders)
+
+    print(f"CE orders excluded: {ce_orders_excluded:,}")
+    print(f"Valid orders after CE exclusion: {len(orders):,}")
+
     return orders
 
 

@@ -66,7 +66,16 @@ def prepare_data(df):
         (df["IS_AN_ORDER_EXCHANGE"] == False)
     ].copy()
 
-    print(f"Valid orders after filtering: {len(df):,}")
+    print(f"Valid orders after standard filtering: {len(df):,}")
+
+    # CRITICAL: Exclude CE orders (system orders, not customer purchases)
+    # CE orders are identified by ORDER_NUMBER starting with 'CE'
+    ce_orders_before = len(df)
+    df = df[~df["ORDER_NUMBER"].astype(str).str.startswith("CE")].copy()
+    ce_orders_excluded = ce_orders_before - len(df)
+
+    print(f"CE orders excluded: {ce_orders_excluded:,}")
+    print(f"Valid orders after CE exclusion: {len(df):,}")
 
     return df
 
