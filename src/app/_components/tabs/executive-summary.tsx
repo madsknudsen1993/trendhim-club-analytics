@@ -310,14 +310,13 @@ const FRESH_ENGAGEMENT = {
     pct2PlusOrders: 6.3,
     pct3PlusOrders: 0.6,
   },
-  // Order distribution for cashback users
-  cbOrderDistribution: [
-    { orders: 1, count: 3, pct: 0.0 },
-    { orders: 2, count: 6577, pct: 59.8 },
-    { orders: 3, count: 2542, pct: 23.1 },
-    { orders: 4, count: 1064, pct: 9.7 },
-    { orders: 5, count: 420, pct: 3.8 },
-    { orders: "6+", count: 393, pct: 3.6 },
+  // Full order distribution for all segments
+  orderDistribution: [
+    { orders: 1, usedCB: 3, usedCBPct: 0.0, clubNoCB: 79163, clubNoCBPct: 78.7, nonClub: 214659, nonClubPct: 93.7 },
+    { orders: 2, usedCB: 6577, usedCBPct: 59.8, clubNoCB: 16859, clubNoCBPct: 16.8, nonClub: 12925, nonClubPct: 5.6 },
+    { orders: 3, usedCB: 2542, usedCBPct: 23.1, clubNoCB: 3368, clubNoCBPct: 3.3, nonClub: 1224, nonClubPct: 0.5 },
+    { orders: 4, usedCB: 1064, usedCBPct: 9.7, clubNoCB: 832, clubNoCBPct: 0.8, nonClub: 176, nonClubPct: 0.1 },
+    { orders: "5+", usedCB: 813, usedCBPct: 7.4, clubNoCB: 408, clubNoCBPct: 0.4, nonClub: 57, nonClubPct: 0.0 },
   ],
   // Key insights
   cbVsClubLift: 114,  // % more orders than Club (no CB)
@@ -1505,26 +1504,36 @@ export function ExecutiveSummaryTab() {
                   </table>
                 </div>
 
-                {/* Order Distribution for CB Users */}
+                {/* Order Distribution - Full Table */}
                 <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border">
-                  <p className="font-semibold text-zinc-700 mb-2">Order Distribution (Cashback Users)</p>
-                  <div className="flex gap-1 h-8">
-                    {FRESH_ENGAGEMENT.cbOrderDistribution.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-purple-500 flex items-center justify-center text-white text-[9px] font-medium rounded"
-                        style={{ width: `${item.pct}%`, minWidth: item.pct > 3 ? '30px' : '0' }}
-                        title={`${item.orders} orders: ${formatNumber(item.count)} (${item.pct}%)`}
-                      >
-                        {item.pct >= 10 && `${item.orders}`}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
-                    <span>2 orders: 59.8%</span>
-                    <span>3 orders: 23.1%</span>
-                    <span>4 orders: 9.7%</span>
-                    <span>5+ orders: 7.4%</span>
+                  <p className="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Order Distribution</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-zinc-300 dark:border-zinc-600">
+                          <th className="py-2 text-left font-medium">Orders</th>
+                          <th className="py-2 text-right font-medium text-purple-700">Used CB</th>
+                          <th className="py-2 text-right font-medium text-purple-700">%</th>
+                          <th className="py-2 text-right font-medium text-blue-700">Club (no CB)</th>
+                          <th className="py-2 text-right font-medium text-blue-700">%</th>
+                          <th className="py-2 text-right font-medium text-zinc-600">Non-Club</th>
+                          <th className="py-2 text-right font-medium text-zinc-600">%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {FRESH_ENGAGEMENT.orderDistribution.map((row, idx) => (
+                          <tr key={idx} className="border-b border-zinc-200 dark:border-zinc-700">
+                            <td className="py-1.5 font-medium">{row.orders}</td>
+                            <td className="py-1.5 text-right font-mono text-purple-700">{formatNumber(row.usedCB)}</td>
+                            <td className="py-1.5 text-right font-mono text-purple-700">{row.usedCBPct}%</td>
+                            <td className="py-1.5 text-right font-mono text-blue-700">{formatNumber(row.clubNoCB)}</td>
+                            <td className="py-1.5 text-right font-mono text-blue-700">{row.clubNoCBPct}%</td>
+                            <td className="py-1.5 text-right font-mono text-zinc-600">{formatNumber(row.nonClub)}</td>
+                            <td className="py-1.5 text-right font-mono text-zinc-600">{row.nonClubPct}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
