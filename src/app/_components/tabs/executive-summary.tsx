@@ -281,6 +281,49 @@ const FRESH_CUSTOMERS = {
   pctFromCashback: 53.8,  // Cashback is now MAJORITY of cost
 };
 
+// ============================================================================
+// FRESH CUSTOMER ENGAGEMENT ANALYSIS
+// Compares purchase frequency by cashback usage among new customers
+// Source: Order history + customer_cashback table
+// ============================================================================
+const FRESH_ENGAGEMENT = {
+  // Segment sizes
+  totalFreshCustomers: 340670,
+  usedCashback: {
+    count: 10999,
+    meanOrders: 2.74,
+    medianOrders: 2,
+    pct2PlusOrders: 100.0,
+    pct3PlusOrders: 40.2,
+  },
+  clubNoCashback: {
+    count: 100630,
+    meanOrders: 1.28,
+    medianOrders: 1,
+    pct2PlusOrders: 21.3,
+    pct3PlusOrders: 4.6,
+  },
+  nonClub: {
+    count: 229041,
+    meanOrders: 1.07,
+    medianOrders: 1,
+    pct2PlusOrders: 6.3,
+    pct3PlusOrders: 0.6,
+  },
+  // Order distribution for cashback users
+  cbOrderDistribution: [
+    { orders: 1, count: 3, pct: 0.0 },
+    { orders: 2, count: 6577, pct: 59.8 },
+    { orders: 3, count: 2542, pct: 23.1 },
+    { orders: 4, count: 1064, pct: 9.7 },
+    { orders: 5, count: 420, pct: 3.8 },
+    { orders: "6+", count: 393, pct: 3.6 },
+  ],
+  // Key insights
+  cbVsClubLift: 114,  // % more orders than Club (no CB)
+  cbVsNonClubLift: 156,  // % more orders than Non-Club
+};
+
 // Program constants
 const PROGRAM = {
   analysisPeriod: "April 2025 - January 2026",
@@ -1389,6 +1432,150 @@ export function ExecutiveSummaryTab() {
                     <li>• <strong>Medium Customers:</strong> Club provides ~13% incremental lift ({formatNumber(CONTROL_GROUP.annualImpact.mediumTrue)} DKK/year).</li>
                     <li>• <strong>Control group sizes are small</strong> (272 Best, 606 Medium), so confidence is limited.</li>
                   </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* ============================================================ */}
+            {/* FRESH CUSTOMER ENGAGEMENT ANALYSIS */}
+            {/* ============================================================ */}
+            <div className="col-span-full border-2 border-purple-500 rounded-lg overflow-hidden">
+              <div className="bg-purple-600 text-white p-3">
+                <h3 className="font-bold text-lg">📊 Fresh Customer Engagement Analysis</h3>
+                <p className="text-purple-100 text-sm">Comparing purchase frequency by cashback usage among new customers</p>
+              </div>
+              <div className="p-4 space-y-4">
+                {/* Methodology */}
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200">
+                  <p className="font-semibold text-purple-700 mb-2">Methodology</p>
+                  <p className="text-xs text-purple-600">
+                    We analyzed <strong>{formatNumber(FRESH_ENGAGEMENT.totalFreshCustomers)} fresh customers</strong> (first order after Club launch, Apr 2025 - Dec 2025)
+                    and segmented them by their cashback behavior:
+                  </p>
+                  <ul className="text-xs text-purple-600 mt-2 space-y-1">
+                    <li>• <strong>Used Cashback:</strong> Customers who redeemed cashback on any order</li>
+                    <li>• <strong>Club (no CB):</strong> Had Club orders but never used cashback</li>
+                    <li>• <strong>Non-Club:</strong> Never placed a Club order</li>
+                  </ul>
+                </div>
+
+                {/* Comparison Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b-2 border-purple-300 bg-purple-50 dark:bg-purple-900/30">
+                        <th className="py-2 text-left">Metric</th>
+                        <th className="py-2 text-right text-purple-700">Used Cashback</th>
+                        <th className="py-2 text-right text-blue-700">Club (no CB)</th>
+                        <th className="py-2 text-right text-zinc-600">Non-Club</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Customers</td>
+                        <td className="py-2 text-right font-mono text-purple-700">{formatNumber(FRESH_ENGAGEMENT.usedCashback.count)}</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{formatNumber(FRESH_ENGAGEMENT.clubNoCashback.count)}</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{formatNumber(FRESH_ENGAGEMENT.nonClub.count)}</td>
+                      </tr>
+                      <tr className="border-b bg-purple-50/50 dark:bg-purple-900/10">
+                        <td className="py-2 font-medium">Mean Orders</td>
+                        <td className="py-2 text-right font-mono font-bold text-purple-700">{FRESH_ENGAGEMENT.usedCashback.meanOrders}</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.meanOrders}</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.meanOrders}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Median Orders</td>
+                        <td className="py-2 text-right font-mono text-purple-700">{FRESH_ENGAGEMENT.usedCashback.medianOrders}</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.medianOrders}</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.medianOrders}</td>
+                      </tr>
+                      <tr className="border-b bg-green-50/50 dark:bg-green-900/10">
+                        <td className="py-2 font-medium">% with 2+ orders</td>
+                        <td className="py-2 text-right font-mono font-bold text-green-600">{FRESH_ENGAGEMENT.usedCashback.pct2PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct2PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct2PlusOrders}%</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">% with 3+ orders</td>
+                        <td className="py-2 text-right font-mono font-bold text-purple-700">{FRESH_ENGAGEMENT.usedCashback.pct3PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct3PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct3PlusOrders}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Order Distribution for CB Users */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border">
+                  <p className="font-semibold text-zinc-700 mb-2">Order Distribution (Cashback Users)</p>
+                  <div className="flex gap-1 h-8">
+                    {FRESH_ENGAGEMENT.cbOrderDistribution.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-purple-500 flex items-center justify-center text-white text-[9px] font-medium rounded"
+                        style={{ width: `${item.pct}%`, minWidth: item.pct > 3 ? '30px' : '0' }}
+                        title={`${item.orders} orders: ${formatNumber(item.count)} (${item.pct}%)`}
+                      >
+                        {item.pct >= 10 && `${item.orders}`}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+                    <span>2 orders: 59.8%</span>
+                    <span>3 orders: 23.1%</span>
+                    <span>4 orders: 9.7%</span>
+                    <span>5+ orders: 7.4%</span>
+                  </div>
+                </div>
+
+                {/* Key Findings */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-300">
+                    <p className="font-semibold text-green-700 mb-2">Key Finding</p>
+                    <p className="text-sm text-green-700">
+                      Fresh customers who <strong>used cashback</strong> have:
+                    </p>
+                    <ul className="text-sm text-green-700 mt-2 space-y-1">
+                      <li>• <strong>+{FRESH_ENGAGEMENT.cbVsClubLift}%</strong> more orders than Club (no CB)</li>
+                      <li>• <strong>+{FRESH_ENGAGEMENT.cbVsNonClubLift}%</strong> more orders than Non-Club</li>
+                      <li>• <strong>100%</strong> have 2+ orders (vs 21% / 6%)</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-300">
+                    <p className="font-semibold text-amber-700 mb-2">Important Caveat</p>
+                    <p className="text-xs text-amber-600">
+                      <strong>Correlation ≠ Causation:</strong> To use cashback, a customer must first <em>earn</em> it
+                      (typically on a previous order). So cashback users are <em>inherently</em> repeat customers.
+                    </p>
+                    <p className="text-xs text-amber-600 mt-2">
+                      However, this shows that <strong>cashback users are your most engaged segment</strong> and
+                      should be nurtured to maximize lifetime value.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Implications */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-700 mb-2">Strategic Implications</p>
+                  <div className="grid md:grid-cols-2 gap-3 text-xs text-blue-600">
+                    <div>
+                      <p className="font-medium">For New Customers:</p>
+                      <ul className="mt-1 space-y-1">
+                        <li>• Encourage first cashback redemption quickly</li>
+                        <li>• Highlight cashback balance after first order</li>
+                        <li>• Send reminder when balance available</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-medium">For Existing CB Users:</p>
+                      <ul className="mt-1 space-y-1">
+                        <li>• These are your VIPs (2.74 orders vs 1.07)</li>
+                        <li>• Consider exclusive offers to retain them</li>
+                        <li>• Track if CB usage predicts high LTV</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
