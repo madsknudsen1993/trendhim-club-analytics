@@ -18,6 +18,8 @@ from psycopg2.extras import RealDictCursor
 ORDER_HISTORY_PATH = Path("/Users/madsknudsen/code/trendhim-club-analytics/PowerBi  - Order_history ")
 DATABASE_URL = "postgresql://localhost:5432/ecom_powers"
 CLUB_LAUNCH_DATE = pd.Timestamp("2025-04-01")
+# Use same dates as fresh_customer_analysis.py for consistency
+AFTER_END = pd.Timestamp("2026-01-31")
 CONVERSION_WINDOW_DAYS = 60
 
 
@@ -108,10 +110,9 @@ def analyze_fresh_customers(orders, cashback_records):
     customer_first_order.columns = ['customer_id', 'first_order_date', 'first_order_number']
 
     # Fresh customers = first order AFTER Club launch
-    # But we need to look at conversion within 60 days, so first order must be early enough
-    # to allow 60 days before data ends
-    data_end = orders['COMPLETED_AT_DATE'].max()
-    cutoff_date = data_end - pd.Timedelta(days=CONVERSION_WINDOW_DAYS)
+    # Use fixed AFTER_END date (matching fresh_customer_analysis.py) for consistency
+    # First order must be early enough to allow 60 days before period ends
+    cutoff_date = AFTER_END - pd.Timedelta(days=CONVERSION_WINDOW_DAYS)
 
     fresh_after_club = customer_first_order[
         (customer_first_order['first_order_date'] >= CLUB_LAUNCH_DATE) &

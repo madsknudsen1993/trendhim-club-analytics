@@ -52,3 +52,18 @@ scripts/analysis_results/
 CONVERSATION_CONTEXT.md
 check_order.ts
 scripts/output/
+
+# exports (PDFs, images)
+exports/
+*.pdf
+*.png
+*.jpg
+*.jpeg
+
+# Python
+__pycache__/
+*.pyc
+*.json
+!package.json
+!tsconfig.json
+!components.json

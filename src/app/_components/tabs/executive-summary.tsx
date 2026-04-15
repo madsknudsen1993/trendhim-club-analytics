@@ -251,76 +251,95 @@ const FRESH_CUSTOMERS = {
   beforeAvgDays: 16.62,   // Mean days to 2nd order
   beforeMedianDays: 11,   // Median days
 
-  // After period (Apr 2025 - Jan 2026)
-  afterLabel: "Apr 2025 - Jan 2026",
-  afterNewCustomers: 340259,
-  afterConverted: 24533,
-  afterConversionRate: 7.21,
+  // After period (Apr 2025 - Dec 2025)
+  // Note: Cutoff is Dec 2 to allow 60-day conversion window before data ends (Jan 31)
+  afterLabel: "Apr 2025 - Dec 2025",
+  afterNewCustomers: 322285,
+  afterConverted: 23321,
+  afterConversionRate: 7.24,
   afterAvgDays: 16.62,    // Mean days to 2nd order (nearly identical)
   afterMedianDays: 10,    // Median days
 
-  // Impact calculation
-  rateLiftPP: -0.85,
-  monthlyNewCustomers: 34026,
-  lostConversionsPerMonth: 289,
+  // Impact calculation (using consistent 8-month period)
+  rateLiftPP: -0.82,      // 7.24 - 8.06 = -0.82pp
+  monthlyNewCustomers: 40286,  // 322,285 / 8 months
+  lostConversionsPerMonth: 330,  // 40,286 × 0.82%
   profitPerConversion: 197,
-  lostProfitPerMonth: 56933,
+  lostProfitPerMonth: 65010,  // 330 × 197
 
-  // Cashback analysis for converters (CORRECTED: balance_cents = cashback spent)
-  cashbackAnalysisMonths: 10, // Apr 2025 - Jan 2026
-  convertersWithCashback: 6694,  // CORRECTED from 12
-  converterCashbackRate: 18.89,  // CORRECTED from 0.05%
-  totalCashbackRedeemed: 663707, // CORRECTED from 762
-  monthlyCashbackCost: 66371, // 663707 ÷ 10 months
+  // Cashback analysis for converters (matching FRESH_ENGAGEMENT criteria)
+  // Uses: CB on ANY order (all-time, not just 60-day window)
+  // Source: Converter engagement analysis
+  cashbackAnalysisMonths: 8, // Apr 2025 - Dec 2025 (8 months)
+  convertersWithCashback: 8238,  // Matches FRESH_ENGAGEMENT.usedCashback.count
+  converterCashbackRate: 35.3,   // 8238/23321 = 35.33%
+  totalCashbackRedeemed: 1632000, // Estimated: 8238 × avg ~198 DKK
+  monthlyCashbackCost: 204000, // 1,632,000 ÷ 8 months
 
   // Total monthly cost
-  totalMonthlyCost: 123304, // 56933 + 66371
-  costFromLostConversions: 56933,
-  costFromCashback: 66371,
-  pctFromLostConversions: 46.2,  // Lost conversions now smaller share
-  pctFromCashback: 53.8,  // Cashback is now MAJORITY of cost
+  totalMonthlyCost: 269010, // 65010 + 204000
+  costFromLostConversions: 65010,
+  costFromCashback: 204000,
+  pctFromLostConversions: 24.2,  // Lost conversions now SMALLER share
+  pctFromCashback: 75.8,  // Cashback is now MAJORITY of cost
 };
 
 // ============================================================================
 // FRESH CUSTOMER ENGAGEMENT ANALYSIS
-// Compares purchase frequency by cashback usage among new customers
+// Analyzes CONVERTERS (2nd order within 60 days) and their all-time engagement
 // Source: Order history + customer_cashback table
+//
+// Methodology:
+// - Converter = 2nd order within 60 days of first order (23,321 total)
+// - Then count ALL orders (all-time) to see ongoing engagement
+// - FRESH_CUSTOMERS.convertersWithCashback = FRESH_ENGAGEMENT.usedCashback.count = 8,238
 // ============================================================================
 const FRESH_ENGAGEMENT = {
-  // Segment sizes
-  totalFreshCustomers: 340670,
+  // CONVERTERS ONLY: 2nd order within 60 days, then count ALL orders (all-time)
+  // This shows: once they convert, how engaged do they become?
+  // Source: fresh_engagement_matching_criteria.py
+  totalConverters: 23321,
   usedCashback: {
-    count: 10999,
-    meanOrders: 2.74,
+    count: 8238,  // Converters who used cashback
+    meanOrders: 2.63,  // All-time orders (not limited to 60 days)
     medianOrders: 2,
-    pct2PlusOrders: 100.0,
-    pct3PlusOrders: 40.2,
+    pct3PlusOrders: 33.7,
+    pct4PlusOrders: 14.0,
+    pct5PlusOrders: 6.0,
+    avgProfitPerOrder: 233.56,
+    avgProfitPerCustomer: 613.35,
   },
   clubNoCashback: {
-    count: 100630,
-    meanOrders: 1.28,
-    medianOrders: 1,
-    pct2PlusOrders: 21.3,
-    pct3PlusOrders: 4.6,
+    count: 1143,
+    meanOrders: 2.33,
+    medianOrders: 2,
+    pct3PlusOrders: 20.6,
+    pct4PlusOrders: 6.8,
+    pct5PlusOrders: 3.0,
+    avgProfitPerOrder: 238.00,
+    avgProfitPerCustomer: 555.13,
   },
   nonClub: {
-    count: 229041,
-    meanOrders: 1.07,
-    medianOrders: 1,
-    pct2PlusOrders: 6.3,
-    pct3PlusOrders: 0.6,
+    count: 13940,
+    meanOrders: 2.25,
+    medianOrders: 2,
+    pct3PlusOrders: 16.6,
+    pct4PlusOrders: 4.6,
+    pct5PlusOrders: 1.7,
+    avgProfitPerOrder: 219.85,
+    avgProfitPerCustomer: 494.66,
   },
-  // Full order distribution for all segments
+  // Order distribution for CONVERTERS (all-time orders)
   orderDistribution: [
-    { orders: 1, usedCB: 3, usedCBPct: 0.0, clubNoCB: 79163, clubNoCBPct: 78.7, nonClub: 214659, nonClubPct: 93.7 },
-    { orders: 2, usedCB: 6577, usedCBPct: 59.8, clubNoCB: 16859, clubNoCBPct: 16.8, nonClub: 12925, nonClubPct: 5.6 },
-    { orders: 3, usedCB: 2542, usedCBPct: 23.1, clubNoCB: 3368, clubNoCBPct: 3.3, nonClub: 1224, nonClubPct: 0.5 },
-    { orders: 4, usedCB: 1064, usedCBPct: 9.7, clubNoCB: 832, clubNoCBPct: 0.8, nonClub: 176, nonClubPct: 0.1 },
-    { orders: "5+", usedCB: 813, usedCBPct: 7.4, clubNoCB: 408, clubNoCBPct: 0.4, nonClub: 57, nonClubPct: 0.0 },
+    { orders: 2, usedCB: 5458, usedCBPct: 66.3, clubNoCB: 908, clubNoCBPct: 79.4, nonClub: 11623, nonClubPct: 83.4 },
+    { orders: 3, usedCB: 1630, usedCBPct: 19.8, clubNoCB: 157, clubNoCBPct: 13.7, nonClub: 1679, nonClubPct: 12.0 },
+    { orders: 4, usedCB: 655, usedCBPct: 8.0, clubNoCB: 44, clubNoCBPct: 3.8, nonClub: 396, nonClubPct: 2.8 },
+    { orders: "5+", usedCB: 495, usedCBPct: 6.0, clubNoCB: 34, clubNoCBPct: 3.0, nonClub: 242, nonClubPct: 1.7 },
   ],
   // Key insights
-  cbVsClubLift: 114,  // % more orders than Club (no CB)
-  cbVsNonClubLift: 156,  // % more orders than Non-Club
+  cbVsClubLift: 13,  // % more orders than Club (no CB): (2.63-2.33)/2.33
+  cbVsNonClubLift: 17,  // % more orders than Non-Club: (2.63-2.25)/2.25
+  cbProfitLift: 24,  // % more profit/customer: (613-494)/494
 };
 
 // Program constants
@@ -1209,7 +1228,7 @@ export function ExecutiveSummaryTab() {
                     <tr className="border-b bg-zinc-50 dark:bg-zinc-800">
                       <th className="py-1.5 text-left font-medium">Metric</th>
                       <th className="py-1.5 text-right font-medium">Before<br/><span className="font-normal text-[9px] text-muted-foreground">Jan 23 - Mar 25</span></th>
-                      <th className="py-1.5 text-right font-medium">After<br/><span className="font-normal text-[9px] text-muted-foreground">Apr 25 - Jan 26</span></th>
+                      <th className="py-1.5 text-right font-medium">After<br/><span className="font-normal text-[9px] text-muted-foreground">Apr 25 - Dec 25</span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1448,13 +1467,13 @@ export function ExecutiveSummaryTab() {
                 <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200">
                   <p className="font-semibold text-purple-700 mb-2">Methodology</p>
                   <p className="text-xs text-purple-600">
-                    We analyzed <strong>{formatNumber(FRESH_ENGAGEMENT.totalFreshCustomers)} fresh customers</strong> (first order after Club launch, Apr 2025 - Dec 2025)
-                    and segmented them by their cashback behavior:
+                    We analyzed <strong>{formatNumber(FRESH_ENGAGEMENT.totalConverters)} converters</strong> (2nd order within 60 days)
+                    and counted their <strong>all-time orders</strong> to see ongoing engagement:
                   </p>
                   <ul className="text-xs text-purple-600 mt-2 space-y-1">
-                    <li>• <strong>Used Cashback:</strong> Customers who redeemed cashback on any order</li>
-                    <li>• <strong>Club (no CB):</strong> Had Club orders but never used cashback</li>
-                    <li>• <strong>Non-Club:</strong> Never placed a Club order</li>
+                    <li>• <strong>Used Cashback:</strong> Redeemed cashback on any order</li>
+                    <li>• <strong>Club (no CB):</strong> In Club system but never used cashback</li>
+                    <li>• <strong>Non-Club:</strong> No Club association</li>
                   </ul>
                 </div>
 
@@ -1489,16 +1508,34 @@ export function ExecutiveSummaryTab() {
                         <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.medianOrders}</td>
                       </tr>
                       <tr className="border-b bg-green-50/50 dark:bg-green-900/10">
-                        <td className="py-2 font-medium">% with 2+ orders</td>
-                        <td className="py-2 text-right font-mono font-bold text-green-600">{FRESH_ENGAGEMENT.usedCashback.pct2PlusOrders}%</td>
-                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct2PlusOrders}%</td>
-                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct2PlusOrders}%</td>
-                      </tr>
-                      <tr className="border-b">
                         <td className="py-2 font-medium">% with 3+ orders</td>
-                        <td className="py-2 text-right font-mono font-bold text-purple-700">{FRESH_ENGAGEMENT.usedCashback.pct3PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono font-bold text-green-600">{FRESH_ENGAGEMENT.usedCashback.pct3PlusOrders}%</td>
                         <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct3PlusOrders}%</td>
                         <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct3PlusOrders}%</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">% with 4+ orders</td>
+                        <td className="py-2 text-right font-mono font-bold text-purple-700">{FRESH_ENGAGEMENT.usedCashback.pct4PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct4PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct4PlusOrders}%</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">% with 5+ orders</td>
+                        <td className="py-2 text-right font-mono text-purple-700">{FRESH_ENGAGEMENT.usedCashback.pct5PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.pct5PlusOrders}%</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.pct5PlusOrders}%</td>
+                      </tr>
+                      <tr className="border-b-2 border-green-300 bg-green-50/50 dark:bg-green-900/10">
+                        <td className="py-2 font-medium text-green-700">Avg Profit/Order</td>
+                        <td className="py-2 text-right font-mono text-purple-700">{FRESH_ENGAGEMENT.usedCashback.avgProfitPerOrder} DKK</td>
+                        <td className="py-2 text-right font-mono font-bold text-green-600">{FRESH_ENGAGEMENT.clubNoCashback.avgProfitPerOrder} DKK</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.avgProfitPerOrder} DKK</td>
+                      </tr>
+                      <tr className="bg-green-100/50 dark:bg-green-900/20">
+                        <td className="py-2 font-medium text-green-700">Avg Profit/Customer</td>
+                        <td className="py-2 text-right font-mono font-bold text-green-600">{FRESH_ENGAGEMENT.usedCashback.avgProfitPerCustomer} DKK</td>
+                        <td className="py-2 text-right font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.avgProfitPerCustomer} DKK</td>
+                        <td className="py-2 text-right font-mono text-zinc-600">{FRESH_ENGAGEMENT.nonClub.avgProfitPerCustomer} DKK</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1537,54 +1574,95 @@ export function ExecutiveSummaryTab() {
                   </div>
                 </div>
 
-                {/* Key Findings */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-300">
-                    <p className="font-semibold text-green-700 mb-2">Key Finding</p>
-                    <p className="text-sm text-green-700">
-                      Fresh customers who <strong>used cashback</strong> have:
-                    </p>
-                    <ul className="text-sm text-green-700 mt-2 space-y-1">
-                      <li>• <strong>+{FRESH_ENGAGEMENT.cbVsClubLift}%</strong> more orders than Club (no CB)</li>
-                      <li>• <strong>+{FRESH_ENGAGEMENT.cbVsNonClubLift}%</strong> more orders than Non-Club</li>
-                      <li>• <strong>100%</strong> have 2+ orders (vs 21% / 6%)</li>
-                    </ul>
+                {/* Honest Assessment */}
+                <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg border-2 border-zinc-300 dark:border-zinc-600">
+                  <p className="font-semibold text-zinc-800 dark:text-zinc-200 mb-3">Honest Assessment: What The Data Actually Shows</p>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200">
+                      <p className="font-medium text-amber-700 mb-2">The Frequency Difference is Modest</p>
+                      <ul className="text-xs text-amber-600 space-y-1">
+                        <li>• Used CB: <strong>2.63</strong> orders vs Non-Club: <strong>2.25</strong> orders</li>
+                        <li>• That&apos;s only <strong>+0.38 orders</strong> (+17%)</li>
+                        <li>• Median is <strong>identical (2)</strong> across all segments</li>
+                        <li>• Club (no CB) has <strong>2.33</strong> orders - almost same as Non-Club</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200">
+                      <p className="font-medium text-red-700 mb-2">Correlation ≠ Causation</p>
+                      <ul className="text-xs text-red-600 space-y-1">
+                        <li>• To use cashback, you must <em>already</em> be a repeat buyer</li>
+                        <li>• Frequent buyers are more likely to use cashback</li>
+                        <li>• We cannot prove cashback <em>causes</em> more orders</li>
+                        <li>• The 3+ order difference (33.7% vs 16.6%) could be selection bias</li>
+                      </ul>
+                    </div>
                   </div>
 
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-300">
-                    <p className="font-semibold text-amber-700 mb-2">Important Caveat</p>
-                    <p className="text-xs text-amber-600">
-                      <strong>Correlation ≠ Causation:</strong> To use cashback, a customer must first <em>earn</em> it
-                      (typically on a previous order). So cashback users are <em>inherently</em> repeat customers.
-                    </p>
-                    <p className="text-xs text-amber-600 mt-2">
-                      However, this shows that <strong>cashback users are your most engaged segment</strong> and
-                      should be nurtured to maximize lifetime value.
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200">
+                    <p className="font-medium text-blue-700 mb-2">Key Insight: Club Membership Alone Doesn&apos;t Drive Frequency</p>
+                    <p className="text-xs text-blue-600">
+                      Club (no CB) customers have <strong>2.33 orders</strong> vs Non-Club&apos;s <strong>2.25 orders</strong> -
+                      essentially no difference. This suggests that simply being in the Club program doesn&apos;t increase
+                      purchase frequency. The lift appears only when customers <em>actively use</em> cashback.
                     </p>
                   </div>
                 </div>
 
-                {/* Implications */}
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-700 mb-2">Strategic Implications</p>
-                  <div className="grid md:grid-cols-2 gap-3 text-xs text-blue-600">
-                    <div>
-                      <p className="font-medium">For New Customers:</p>
-                      <ul className="mt-1 space-y-1">
-                        <li>• Encourage first cashback redemption quickly</li>
-                        <li>• Highlight cashback balance after first order</li>
-                        <li>• Send reminder when balance available</li>
-                      </ul>
+                {/* What We Can Conclude */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-300">
+                    <p className="font-semibold text-green-700 mb-2">What We CAN Say</p>
+                    <ul className="text-xs text-green-600 space-y-1">
+                      <li>• Cashback users ARE your most profitable segment ({FRESH_ENGAGEMENT.usedCashback.avgProfitPerCustomer} DKK/customer)</li>
+                      <li>• They have more 3+ order customers (33.7% vs 16.6%)</li>
+                      <li>• Total profit/customer is +24% higher than Non-Club</li>
+                      <li>• These customers should be nurtured regardless of causation</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-300">
+                    <p className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">What We CANNOT Claim</p>
+                    <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
+                      <li>• That cashback directly causes more purchases</li>
+                      <li>• That Club membership alone increases frequency</li>
+                      <li>• That converting Non-Club to CB users will replicate results</li>
+                      <li>• That the modest +0.38 order lift is due to cashback</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Converter breakdown */}
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-300">
+                  <p className="font-semibold text-purple-700 mb-2">Converter Breakdown ({formatNumber(FRESH_ENGAGEMENT.totalConverters)} total)</p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-2">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded">
+                      <p className="font-bold text-purple-700">{formatNumber(FRESH_ENGAGEMENT.usedCashback.count)}</p>
+                      <p className="text-purple-600">Used CB (35%)</p>
+                      <p className="font-mono text-purple-700">{FRESH_ENGAGEMENT.usedCashback.avgProfitPerCustomer} DKK</p>
                     </div>
-                    <div>
-                      <p className="font-medium">For Existing CB Users:</p>
-                      <ul className="mt-1 space-y-1">
-                        <li>• These are your VIPs (2.74 orders vs 1.07)</li>
-                        <li>• Consider exclusive offers to retain them</li>
-                        <li>• Track if CB usage predicts high LTV</li>
-                      </ul>
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded">
+                      <p className="font-bold text-blue-700">{formatNumber(FRESH_ENGAGEMENT.clubNoCashback.count)}</p>
+                      <p className="text-blue-600">Club no CB (5%)</p>
+                      <p className="font-mono text-blue-700">{FRESH_ENGAGEMENT.clubNoCashback.avgProfitPerCustomer} DKK</p>
+                    </div>
+                    <div className="p-2 bg-zinc-200 dark:bg-zinc-700 rounded">
+                      <p className="font-bold text-zinc-700 dark:text-zinc-300">{formatNumber(FRESH_ENGAGEMENT.nonClub.count)}</p>
+                      <p className="text-zinc-600 dark:text-zinc-400">Non-Club (60%)</p>
+                      <p className="font-mono text-zinc-700 dark:text-zinc-300">{FRESH_ENGAGEMENT.nonClub.avgProfitPerCustomer} DKK</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Actionable Takeaway */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
+                  <p className="font-semibold text-blue-700 mb-2">Actionable Takeaway</p>
+                  <p className="text-sm text-blue-600">
+                    Cashback users are valuable, but the <strong>incremental value of Club for fresh customers is unclear</strong>.
+                    Focus on identifying and nurturing naturally high-frequency customers rather than expecting Club/cashback
+                    to transform low-frequency buyers into high-frequency ones.
+                  </p>
                 </div>
               </div>
             </div>
